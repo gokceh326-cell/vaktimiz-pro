@@ -16,51 +16,39 @@ jobs:
 
     steps:
 
-      # =========================================================
-      # 1 — KAYNAK KODU AL
-      # =========================================================
-
       - name: Kaynak kodu al
         uses: actions/checkout@v4
 
 
-      # =========================================================
-      # 2 — JAVA 17
-      # =========================================================
-
       - name: Java 17 kurulumu
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
-
-      # =========================================================
-      # 3 — ANDROID SDK
-      # =========================================================
 
       - name: Android SDK kurulumu
         uses: android-actions/setup-android@v3
 
-      - name: Android SDK yollarını ayarla
+
+      - name: Android SDK hazırla
         shell: bash
         run: |
+          set -e
+
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
-          echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
-          echo "$ANDROID_SDK_ROOT/emulator" >> "$GITHUB_PATH"
 
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
 
-          if [ ! -f "$SDKMANAGER" ]; then
+          if [ ! -x "$SDKMANAGER" ]; then
             echo "sdkmanager bulunamadı."
-            echo "Android SDK içeriği:"
-            find "$ANDROID_SDK_ROOT" -maxdepth 4 -type f -name sdkmanager 2>/dev/null || true
+            find "$ANDROID_SDK_ROOT" -type f -name sdkmanager 2>/dev/null || true
             exit 1
           fi
 
-          chmod +x "$SDKMANAGER"
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
 
           yes | "$SDKMANAGER" --licenses || true
 
@@ -69,31 +57,24 @@ jobs:
             "platforms;android-35" \
             "build-tools;35.0.0"
 
-          echo "ANDROID SDK hazır."
+          echo "Android SDK hazır."
 
-
-      # =========================================================
-      # 4 — ANDROID PROJESİNİ OTOMATİK OLUŞTUR
-      # =========================================================
 
       - name: Android projesini oluştur
         shell: bash
         run: |
-
           set -e
 
           mkdir -p app/src/main/java/com/vaktimizpro/app
-          mkdir -p app/src/main/res/layout
-          mkdir -p app/src/main/res/mipmap-hdpi
-          mkdir -p app/src/main/res/mipmap-mdpi
-          mkdir -p app/src/main/res/mipmap-xhdpi
-          mkdir -p app/src/main/res/mipmap-xxhdpi
-          mkdir -p app/src/main/res/mipmap-xxxhdpi
           mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/values
 
-          # -----------------------------------------------------
-          # settings.gradle
-          # -----------------------------------------------------
+          if [ ! -f index.html ]; then
+            echo "HATA: index.html bulunamadı."
+            exit 1
+          fi
+
+          cp index.html app/src/main/assets/index.html
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
@@ -117,10 +98,6 @@ jobs:
           EOF
 
 
-          # -----------------------------------------------------
-          # build.gradle
-          # -----------------------------------------------------
-
           cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.8.2' apply false
@@ -128,20 +105,12 @@ jobs:
           EOF
 
 
-          # -----------------------------------------------------
-          # gradle.properties
-          # -----------------------------------------------------
-
           cat > gradle.properties <<'EOF'
           org.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8
           android.useAndroidX=true
           android.nonTransitiveRClass=true
           EOF
 
-
-          # -----------------------------------------------------
-          # APP BUILD.GRADLE
-          # -----------------------------------------------------
 
           cat > app/build.gradle <<'EOF'
           plugins {
@@ -180,24 +149,6 @@ jobs:
           EOF
 
 
-          # =====================================================
-          # 5 — MEVCUT INDEX.HTML'İ UYGULAMAYA KOPYALA
-          # =====================================================
-
-          if [ ! -f "index.html" ]; then
-            echo "HATA: index.html bulunamadı."
-            exit 1
-          fi
-
-          cp index.html app/src/main/assets/index.html
-
-          echo "index.html Android uygulamasına kopyalandı."
-
-
-          # =====================================================
-          # 6 — ANDROID MANIFEST
-          # =====================================================
-
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
 
@@ -214,8 +165,7 @@ jobs:
                   android:usesCleartextTraffic="true"
                   android:hardwareAccelerated="true"
                   android:label="Vaktimiz Pro"
-                  android:theme="@style/AppTheme"
-                  android:supportsRtl="true">
+                  android:theme="@style/AppTheme">
 
                   <activity
                       android:name=".MainActivity"
@@ -223,12 +173,8 @@ jobs:
                       android:exported="true">
 
                       <intent-filter>
-
                           <action android:name="android.intent.action.MAIN"/>
-
-                          <category
-                              android:name="android.intent.category.LAUNCHER"/>
-
+                          <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
 
                   </activity>
@@ -238,12 +184,6 @@ jobs:
           </manifest>
           EOF
 
-
-          # =====================================================
-          # 7 — TEMA
-          # =====================================================
-
-          mkdir -p app/src/main/res/values
 
           cat > app/src/main/res/values/styles.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
@@ -257,8 +197,8 @@ jobs:
                   <item name="android:fontFamily">sans</item>
                   <item name="android:windowActionModeOverlay">true</item>
                   <item name="android:colorAccent">#4CAF50</item>
-                  <item name="android:navigationBarColor">#000000</item>
                   <item name="android:statusBarColor">#000000</item>
+                  <item name="android:navigationBarColor">#000000</item>
                   <item name="android:windowLightStatusBar">false</item>
 
               </style>
@@ -267,27 +207,19 @@ jobs:
           EOF
 
 
-          # =====================================================
-          # 8 — ANA ANDROID AKTİVİTESİ
-          # =====================================================
-
           cat > app/src/main/java/com/vaktimizpro/app/MainActivity.java <<'EOF'
           package com.vaktimizpro.app;
 
           import android.Manifest;
-          import android.app.Activity;
-          import android.os.Bundle;
           import android.os.Build;
+          import android.os.Bundle;
+          import android.content.pm.PackageManager;
           import android.webkit.GeolocationPermissions;
           import android.webkit.PermissionRequest;
           import android.webkit.WebChromeClient;
           import android.webkit.WebSettings;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
-          import android.webkit.WebResourceRequest;
-          import android.net.Uri;
-          import android.content.Intent;
-          import android.content.pm.PackageManager;
 
           import androidx.activity.OnBackPressedCallback;
           import androidx.appcompat.app.AppCompatActivity;
@@ -296,16 +228,11 @@ jobs:
 
               private WebView webView;
 
-              private static final int LOCATION_PERMISSION = 100;
-              private static final int NOTIFICATION_PERMISSION = 101;
-
               @Override
               protected void onCreate(Bundle savedInstanceState) {
-
                   super.onCreate(savedInstanceState);
 
                   webView = new WebView(this);
-
                   setContentView(webView);
 
                   WebSettings settings = webView.getSettings();
@@ -313,19 +240,10 @@ jobs:
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
                   settings.setDatabaseEnabled(true);
-
                   settings.setAllowFileAccess(true);
                   settings.setAllowContentAccess(true);
-
                   settings.setJavaScriptCanOpenWindowsAutomatically(true);
                   settings.setSupportMultipleWindows(true);
-
-                  settings.setBuiltInZoomControls(false);
-                  settings.setDisplayZoomControls(false);
-
-                  settings.setLoadWithOverviewMode(false);
-                  settings.setUseWideViewPort(false);
-
                   settings.setMediaPlaybackRequiresUserGesture(false);
 
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -334,27 +252,7 @@ jobs:
                       );
                   }
 
-                  webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
-
-                  webView.setWebViewClient(new WebViewClient() {
-
-                      @Override
-                      public boolean shouldOverrideUrlLoading(
-                              WebView view,
-                              WebResourceRequest request) {
-
-                          return false;
-                      }
-
-                      @Override
-                      public boolean shouldOverrideUrlLoading(
-                              WebView view,
-                              String url) {
-
-                          return false;
-                      }
-                  });
-
+                  webView.setWebViewClient(new WebViewClient());
 
                   webView.setWebChromeClient(new WebChromeClient() {
 
@@ -363,20 +261,18 @@ jobs:
                               String origin,
                               GeolocationPermissions.Callback callback) {
 
-                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                              checkSelfPermission(
+                                  Manifest.permission.ACCESS_FINE_LOCATION
+                              ) != PackageManager.PERMISSION_GRANTED) {
 
-                              if (checkSelfPermission(
-                                      Manifest.permission.ACCESS_FINE_LOCATION)
-                                      != PackageManager.PERMISSION_GRANTED) {
-
-                                  requestPermissions(
-                                      new String[]{
-                                          Manifest.permission.ACCESS_FINE_LOCATION,
-                                          Manifest.permission.ACCESS_COARSE_LOCATION
-                                      },
-                                      LOCATION_PERMISSION
-                                  );
-                              }
+                              requestPermissions(
+                                  new String[]{
+                                      Manifest.permission.ACCESS_FINE_LOCATION,
+                                      Manifest.permission.ACCESS_COARSE_LOCATION
+                                  },
+                                  100
+                              );
                           }
 
                           callback.invoke(origin, true, false);
@@ -386,64 +282,35 @@ jobs:
                       public void onPermissionRequest(
                               PermissionRequest request) {
 
-                          runOnUiThread(() -> {
-
-                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
-                                  request.grant(
-                                      request.getResources()
-                                  );
-                              }
-                          });
+                          runOnUiThread(() ->
+                              request.grant(request.getResources())
+                          );
                       }
                   });
 
-
-                  if (Build.VERSION.SDK_INT >= 33) {
-
-                      if (checkSelfPermission(
-                              Manifest.permission.POST_NOTIFICATIONS)
-                              != PackageManager.PERMISSION_GRANTED) {
-
-                          requestPermissions(
-                              new String[]{
-                                  Manifest.permission.POST_NOTIFICATIONS
-                              },
-                              NOTIFICATION_PERMISSION
-                          );
-                      }
-                  }
-
-
                   webView.loadUrl("file:///android_asset/index.html");
 
-
                   getOnBackPressedDispatcher().addCallback(
-                          this,
-                          new OnBackPressedCallback(true) {
+                      this,
+                      new OnBackPressedCallback(true) {
 
-                              @Override
-                              public void handleOnBackPressed() {
+                          @Override
+                          public void handleOnBackPressed() {
 
-                                  if (webView.canGoBack()) {
-                                      webView.goBack();
-                                  } else {
-                                      finish();
-                                  }
+                              if (webView.canGoBack()) {
+                                  webView.goBack();
+                              } else {
+                                  finish();
                               }
                           }
+                      }
                   );
               }
-
 
               @Override
               protected void onDestroy() {
 
                   if (webView != null) {
-
-                      webView.stopLoading();
-                      webView.clearHistory();
-                      webView.clearCache(true);
                       webView.destroy();
                   }
 
@@ -453,14 +320,9 @@ jobs:
           EOF
 
 
-      # =========================================================
-      # 9 — GRADLE KUR
-      # =========================================================
-
       - name: Gradle kurulumu
         shell: bash
         run: |
-
           set -e
 
           GRADLE_VERSION="8.10.2"
@@ -475,79 +337,42 @@ jobs:
 
           echo "/opt/gradle/gradle-${GRADLE_VERSION}/bin" >> "$GITHUB_PATH"
 
-          gradle --version
 
-
-      # =========================================================
-      # 10 — GRADLE PROJESİNİ KONTROL ET
-      # =========================================================
-
-      - name: Gradle projesini kontrol et
+      - name: Gradle kontrolü
         shell: bash
         run: |
-
           set -e
-
-          echo "Java:"
           java -version
-
-          echo ""
-          echo "Gradle:"
           gradle --version
 
-          echo ""
-          echo "Android SDK:"
-          echo "$ANDROID_SDK_ROOT"
-
-          echo ""
-          echo "Proje:"
-          find . -maxdepth 4 -type f | sort
-
-
-      # =========================================================
-      # 11 — DEBUG APK
-      # =========================================================
 
       - name: APK oluştur
         shell: bash
         run: |
-
           set -e
+          gradle --no-daemon --stacktrace :app:assembleRelease
 
-          gradle \
-            --no-daemon \
-            --stacktrace \
-            :app:assembleRelease
-
-
-      # =========================================================
-      # 12 — APK DOSYASINI KONTROL ET
-      # =========================================================
 
       - name: APK dosyasını kontrol et
         shell: bash
         run: |
-
           set -e
 
           APK="app/build/outputs/apk/release/app-release.apk"
 
           if [ ! -f "$APK" ]; then
-              echo "APK oluşturulamadı."
-              echo "Olası APK dosyaları:"
-              find app -type f -name "*.apk" -print || true
-              exit 1
+            echo "APK bulunamadı."
+            find app -type f -name "*.apk" -print
+            exit 1
           fi
 
-          echo "APK başarıyla oluşturuldu:"
           ls -lh "$APK"
 
-
-      # =========================================================
-      # 13 — APK'YI GITHUB'A YÜKLE
-      # =========================================================
 
       - name: APK'yı yükle
         uses: actions/upload-artifact@v4
         with:
-          name: Vaktimiz
+          name: Vaktimiz-Pro-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
