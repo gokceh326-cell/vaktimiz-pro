@@ -1,4 +1,4 @@
-name: Vaktimiz Pro APK
+name: Vaktimiz Pro APK Oluştur
 
 on:
   workflow_dispatch:
@@ -6,90 +6,99 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
-
 jobs:
   build-apk:
-    name: Vaktimiz Pro APK Oluştur
+    name: Android APK Build
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      APP_NAME: "Vaktimiz Pro"
+      PACKAGE_NAME: "com.vaktimizpro.app"
+      ANDROID_COMPILE_SDK: "35"
+      ANDROID_MIN_SDK: "23"
+      ANDROID_TARGET_SDK: "35"
+      GRADLE_VERSION: "8.9"
 
     steps:
 
-      # ============================================================
-      # 1 — KAYNAK KODU AL
-      # ============================================================
-
-      - name: Kaynak kodu al
+      # --------------------------------------------------
+      # 1. Kaynak kodunu al
+      # --------------------------------------------------
+      - name: Kaynak kodunu al
         uses: actions/checkout@v4
 
-
-      # ============================================================
-      # 2 — JAVA 17
-      # ============================================================
-
+      # --------------------------------------------------
+      # 2. Java 17
+      # ÖNEMLİ:
+      # cache: gradle YOK.
+      # Böylece proje henüz oluşmadan Gradle cache aranmaz.
+      # --------------------------------------------------
       - name: Java 17 kurulumu
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
-          cache: gradle
+          java-version: "17"
 
-
-      # ============================================================
-      # 3 — ANDROID SDK
-      # ============================================================
-
+      # --------------------------------------------------
+      # 3. Android SDK
+      # --------------------------------------------------
       - name: Android SDK kurulumu
         uses: android-actions/setup-android@v3
 
-
-      # ============================================================
-      # 4 — ANDROID SDK PAKETLERİ
-      # ============================================================
-
+      # --------------------------------------------------
+      # 4. Gerekli Android SDK paketlerini kur
+      # --------------------------------------------------
       - name: Android SDK paketlerini kur
         shell: bash
         run: |
-          set -e
-
-          sdkmanager --version
-
           yes | sdkmanager --licenses >/dev/null || true
 
           sdkmanager \
             "platform-tools" \
-            "platforms;android-35" \
+            "platforms;android-${ANDROID_COMPILE_SDK}" \
             "build-tools;35.0.0"
 
-
-      # ============================================================
-      # 5 — ANDROID PROJESİNİ OLUŞTUR
-      # ============================================================
-
+      # --------------------------------------------------
+      # 5. Android projesini oluştur
+      # --------------------------------------------------
       - name: Android projesini oluştur
         shell: bash
         run: |
-          set -e
+          mkdir -p app/src/main/java/com/vaktimizpro/app
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/res/mipmap-xhdpi
+          mkdir -p app/src/main/res/mipmap-xxhdpi
+          mkdir -p app/src/main/res/mipmap-xxxhdpi
 
-          rm -rf android-app
+      # --------------------------------------------------
+      # 6. index.html dosyanı APK içine koy
+      # --------------------------------------------------
+      - name: index.html dosyasını Android'e kopyala
+        shell: bash
+        run: |
+          if [ ! -f "index.html" ]; then
+            echo "HATA: index.html bulunamadı."
+            exit 1
+          fi
 
-          mkdir -p android-app
-          mkdir -p android-app/app/src/main/java/com/vaktimizpro/app
-          mkdir -p android-app/app/src/main/assets
-          mkdir -p android-app/app/src/main/res/values
+          cp index.html app/src/main/assets/index.html
 
+          echo "index.html başarıyla Android assets klasörüne kopyalandı."
+          wc -l app/src/main/assets/index.html
 
-      # ============================================================
-      # 6 — SETTINGS.GRADLE
-      # ============================================================
-
+      # --------------------------------------------------
+      # 7. settings.gradle
+      # --------------------------------------------------
       - name: settings.gradle oluştur
         shell: bash
         run: |
-          set -e
-
-          cat > android-app/settings.gradle <<'EOF'
+          cat > settings.gradle <<'EOF'
           pluginManagement {
               repositories {
                   google()
@@ -100,7 +109,6 @@ jobs:
 
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-
               repositories {
                   google()
                   mavenCentral()
@@ -108,181 +116,111 @@ jobs:
           }
 
           rootProject.name = "VaktimizPro"
-
           include(":app")
           EOF
 
-
-      # ============================================================
-      # 7 — ANA GRADLE
-      # ============================================================
-
-      - name: Ana build.gradle oluştur
+      # --------------------------------------------------
+      # 8. Ana build.gradle
+      # --------------------------------------------------
+      - name: Ana Gradle dosyasını oluştur
         shell: bash
         run: |
-          set -e
-
-          cat > android-app/build.gradle <<'EOF'
+          cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.7.3' apply false
-              id 'org.jetbrains.kotlin.android' version '2.0.21' apply false
           }
           EOF
 
-
-      # ============================================================
-      # 8 — GRADLE PROPERTIES
-      # ============================================================
-
-      - name: gradle.properties oluştur
+      # --------------------------------------------------
+      # 9. Gradle properties
+      # --------------------------------------------------
+      - name: Gradle ayarlarını oluştur
         shell: bash
         run: |
-          set -e
-
-          cat > android-app/gradle.properties <<'EOF'
+          cat > gradle.properties <<'EOF'
           org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
           android.useAndroidX=true
           android.nonTransitiveRClass=true
           EOF
 
-
-      # ============================================================
-      # 9 — APP BUILD.GRADLE
-      # ============================================================
-
+      # --------------------------------------------------
+      # 10. App build.gradle
+      # --------------------------------------------------
       - name: Android build.gradle oluştur
         shell: bash
         run: |
-          set -e
-
-          cat > android-app/app/build.gradle <<'EOF'
+          cat > app/build.gradle <<'EOF'
           plugins {
               id 'com.android.application'
-              id 'org.jetbrains.kotlin.android'
           }
 
           android {
-
               namespace 'com.vaktimizpro.app'
-
               compileSdk 35
 
               defaultConfig {
-
                   applicationId 'com.vaktimizpro.app'
-
                   minSdk 23
-
                   targetSdk 35
-
                   versionCode 1
-
-                  versionName '1.0'
+                  versionName "1.0"
               }
 
               buildTypes {
-
                   release {
-
                       minifyEnabled false
-
                       shrinkResources false
 
-                      /*
-                       * ÖNEMLİ:
-                       * Release APK artık imzalanıyor.
-                       * Böylece Android telefonda
-                       * "Paket geçersiz" hatası oluşmaz.
-                       */
-                      signingConfig signingConfigs.debug
+                      proguardFiles(
+                          getDefaultProguardFile('proguard-android-optimize.txt'),
+                          'proguard-rules.pro'
+                      )
                   }
               }
 
-              compileOptions {
-
-                  sourceCompatibility JavaVersion.VERSION_17
-
-                  targetCompatibility JavaVersion.VERSION_17
+              packaging {
+                  resources {
+                      excludes += [
+                          'META-INF/DEPENDENCIES',
+                          'META-INF/LICENSE',
+                          'META-INF/LICENSE.txt',
+                          'META-INF/NOTICE',
+                          'META-INF/NOTICE.txt'
+                      ]
+                  }
               }
-
-              kotlinOptions {
-
-                  jvmTarget = '17'
-              }
-          }
-
-          dependencies {
-
-              implementation 'androidx.core:core-ktx:1.15.0'
-
-              implementation 'androidx.appcompat:appcompat:1.7.0'
-
-              implementation 'androidx.activity:activity-ktx:1.10.0'
-
-              implementation 'androidx.webkit:webkit:1.12.1'
           }
           EOF
 
+          touch app/proguard-rules.pro
 
-      # ============================================================
-      # 10 — ANDROID MANIFEST
-      # ============================================================
-
+      # --------------------------------------------------
+      # 11. AndroidManifest
+      # --------------------------------------------------
       - name: AndroidManifest oluştur
         shell: bash
         run: |
-          set -e
-
-          cat > android-app/app/src/main/AndroidManifest.xml <<'EOF'
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
 
-          <manifest
-              xmlns:android="http://schemas.android.com/apk/res/android">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-              <uses-permission
-                  android:name="android.permission.INTERNET" />
-
-              <uses-permission
-                  android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-              <uses-permission
-                  android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-              <uses-permission
-                  android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.INTERNET" />
 
               <application
-
                   android:allowBackup="true"
-
-                  android:hardwareAccelerated="true"
-
                   android:label="Vaktimiz Pro"
-
+                  android:supportsRtl="true"
                   android:theme="@style/AppTheme"
-
-                  android:usesCleartextTraffic="true"
-
-                  android:supportsRtl="true">
+                  android:usesCleartextTraffic="true">
 
                   <activity
-
                       android:name=".MainActivity"
-
-                      android:exported="true"
-
-                      android:screenOrientation="portrait"
-
-                      android:configChanges="orientation|screenSize|keyboardHidden">
+                      android:exported="true">
 
                       <intent-filter>
-
-                          <action
-                              android:name="android.intent.action.MAIN" />
-
-                          <category
-                              android:name="android.intent.category.LAUNCHER" />
-
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
 
                   </activity>
@@ -292,394 +230,169 @@ jobs:
           </manifest>
           EOF
 
-
-      # ============================================================
-      # 11 — TEMA
-      # ============================================================
-
+      # --------------------------------------------------
+      # 12. Tema
+      # --------------------------------------------------
       - name: Android temasını oluştur
         shell: bash
         run: |
-          set -e
-
-          cat > android-app/app/src/main/res/values/styles.xml <<'EOF'
+          cat > app/src/main/res/values/styles.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
 
           <resources>
 
               <style
                   name="AppTheme"
-                  parent="Theme.AppCompat.DayNight.NoActionBar">
+                  parent="android:style/Theme.Material.Light.NoActionBar">
 
                   <item name="android:fontFamily">sans</item>
-
+                  <item name="android:windowActionModeOverlay">true</item>
                   <item name="android:windowNoTitle">true</item>
-
-                  <item name="android:colorAccent">#4CAF50</item>
-
-                  <item name="android:statusBarColor">#101114</item>
-
-                  <item name="android:navigationBarColor">#101114</item>
-
-                  <item name="android:windowLightStatusBar">false</item>
+                  <item name="android:colorAccent">#2196F3</item>
 
               </style>
 
           </resources>
           EOF
 
-
-      # ============================================================
-      # 12 — MAIN ACTIVITY
-      # ============================================================
-
-      - name: MainActivity oluştur
+      # --------------------------------------------------
+      # 13. MainActivity
+      # --------------------------------------------------
+      - name: Ana Activity oluştur
         shell: bash
         run: |
-          set -e
+          cat > app/src/main/java/com/vaktimizpro/app/MainActivity.java <<'EOF'
+          package com.vaktimizpro.app;
 
-          cat > android-app/app/src/main/java/com/vaktimizpro/app/MainActivity.kt <<'EOF'
-          package com.vaktimizpro.app
+          import android.annotation.SuppressLint;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
 
-          import android.Manifest
-          import android.annotation.SuppressLint
-          import android.content.pm.PackageManager
-          import android.graphics.Color
-          import android.os.Bundle
-          import android.view.View
-          import android.webkit.GeolocationPermissions
-          import android.webkit.WebChromeClient
-          import android.webkit.WebResourceRequest
-          import android.webkit.WebSettings
-          import android.webkit.WebView
-          import android.webkit.WebViewClient
+          public class MainActivity extends Activity {
 
-          import androidx.activity.OnBackPressedCallback
-          import androidx.appcompat.app.AppCompatActivity
-          import androidx.core.app.ActivityCompat
-          import androidx.core.content.ContextCompat
-          import androidx.webkit.WebViewAssetLoader
-
-          class MainActivity : AppCompatActivity() {
-
-              private lateinit var webView: WebView
-
-              companion object {
-                  private const val LOCATION_REQUEST = 1001
-              }
+              private WebView webView;
 
               @SuppressLint("SetJavaScriptEnabled")
-              override fun onCreate(savedInstanceState: Bundle?) {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
 
-                  super.onCreate(savedInstanceState)
+                  webView = new WebView(this);
 
-                  webView = WebView(this)
+                  WebSettings settings = webView.getSettings();
 
-                  webView.setBackgroundColor(Color.BLACK)
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setSupportZoom(false);
+                  settings.setLoadWithOverviewMode(false);
+                  settings.setUseWideViewPort(false);
 
-                  webView.overScrollMode =
-                      View.OVER_SCROLL_NEVER
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.setWebChromeClient(new WebChromeClient());
 
-                  val assetLoader =
-                      WebViewAssetLoader.Builder()
-                          .addPathHandler(
-                              "/assets/",
-                              WebViewAssetLoader.AssetsPathHandler(this)
-                          )
-                          .build()
+                  webView.loadUrl("file:///android_asset/index.html");
 
-                  webView.webViewClient =
-                      object : WebViewClient() {
-
-                          override fun shouldInterceptRequest(
-                              view: WebView,
-                              request: WebResourceRequest
-                          ) =
-                              assetLoader.shouldInterceptRequest(
-                                  request.url
-                              )
-                      }
-
-                  webView.webChromeClient =
-                      object : WebChromeClient() {
-
-                          override fun onGeolocationPermissionsShowPrompt(
-                              origin: String?,
-                              callback: GeolocationPermissions.Callback?
-                          ) {
-
-                              if (
-                                  ContextCompat.checkSelfPermission(
-                                      this@MainActivity,
-                                      Manifest.permission.ACCESS_FINE_LOCATION
-                                  ) != PackageManager.PERMISSION_GRANTED
-                              ) {
-
-                                  ActivityCompat.requestPermissions(
-                                      this@MainActivity,
-                                      arrayOf(
-                                          Manifest.permission.ACCESS_FINE_LOCATION,
-                                          Manifest.permission.ACCESS_COARSE_LOCATION
-                                      ),
-                                      LOCATION_REQUEST
-                                  )
-                              }
-
-                              callback?.invoke(
-                                  origin,
-                                  true,
-                                  false
-                              )
-                          }
-                      }
-
-                  webView.settings.apply {
-
-                      javaScriptEnabled = true
-
-                      domStorageEnabled = true
-
-                      databaseEnabled = true
-
-                      allowFileAccess = true
-
-                      allowContentAccess = true
-
-                      javaScriptCanOpenWindowsAutomatically = true
-
-                      setSupportMultipleWindows(true)
-
-                      loadsImagesAutomatically = true
-
-                      mediaPlaybackRequiresUserGesture = false
-
-                      mixedContentMode =
-                          WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-
-                      cacheMode =
-                          WebSettings.LOAD_DEFAULT
-                  }
-
-                  setContentView(webView)
-
-                  webView.loadUrl(
-                      "https://appassets.androidplatform.net/assets/index.html"
-                  )
-
-                  onBackPressedDispatcher.addCallback(
-                      this,
-                      object : OnBackPressedCallback(true) {
-
-                          override fun handleOnBackPressed() {
-
-                              if (webView.canGoBack()) {
-
-                                  webView.goBack()
-
-                              } else {
-
-                                  finish()
-                              }
-                          }
-                      }
-                  )
+                  setContentView(webView);
               }
 
-              override fun onDestroy() {
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
 
-                  webView.stopLoading()
+              @Override
+              protected void onDestroy() {
+                  if (webView != null) {
+                      webView.destroy();
+                  }
 
-                  webView.destroy()
-
-                  super.onDestroy()
+                  super.onDestroy();
               }
           }
           EOF
 
-
-      # ============================================================
-      # 13 — SENİN BÜYÜK INDEX.HTML DOSYAN
-      # ============================================================
-
-      - name: Büyük index.html dosyasını APK içine kopyala
-        shell: bash
-        run: |
-          set -e
-
-          if [ ! -f "index.html" ]; then
-
-            echo "HATA: index.html bulunamadı."
-
-            exit 1
-
-          fi
-
-          cp \
-            index.html \
-            android-app/app/src/main/assets/index.html
-
-          echo ""
-          echo "========================================"
-          echo "index.html APK içine kopyalandı"
-          echo "========================================"
-
-          wc -l \
-            android-app/app/src/main/assets/index.html
-
-          du -h \
-            android-app/app/src/main/assets/index.html
-
-
-      # ============================================================
-      # 14 — GRADLE
-      # ============================================================
-
+      # --------------------------------------------------
+      # 14. Gradle kurulumu
+      # --------------------------------------------------
       - name: Gradle kurulumu
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: ${{ env.GRADLE_VERSION }}
 
-
-      # ============================================================
-      # 15 — PROJE KONTROL
-      # ============================================================
-
-      - name: Gradle projesini kontrol et
-        working-directory: android-app
+      # --------------------------------------------------
+      # 15. Gradle Wrapper oluştur
+      # --------------------------------------------------
+      - name: Gradle Wrapper oluştur
         shell: bash
         run: |
-          set -e
+          gradle wrapper --gradle-version "${GRADLE_VERSION}"
 
-          gradle --version
+      # --------------------------------------------------
+      # 16. Gradle Wrapper izinleri
+      # --------------------------------------------------
+      - name: Gradle Wrapper izinlerini ayarla
+        shell: bash
+        run: |
+          chmod +x ./gradlew
 
-          gradle tasks --all
+      # --------------------------------------------------
+      # 17. Android projesini kontrol et
+      # --------------------------------------------------
+      - name: Android projesini kontrol et
+        shell: bash
+        run: |
+          ./gradlew --version
+          ./gradlew :app:tasks --no-daemon
 
-
-      # ============================================================
-      # 16 — APK OLUŞTUR
-      # ============================================================
-
+      # --------------------------------------------------
+      # 18. APK oluştur
+      # --------------------------------------------------
       - name: APK oluştur
-        working-directory: android-app
         shell: bash
         run: |
-          set -e
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-          gradle clean assembleRelease \
-            --no-daemon \
-            --stacktrace
-
-
-      # ============================================================
-      # 17 — APK DOSYASINI BUL
-      # ============================================================
-
-      - name: APK dosyasını bul
-        id: find_apk
+      # --------------------------------------------------
+      # 19. APK'yı kontrol et
+      # --------------------------------------------------
+      - name: APK dosyasını kontrol et
         shell: bash
         run: |
-          set -e
-
           echo "APK dosyaları:"
+          find app/build/outputs/apk -type f -name "*.apk" -print
 
-          find \
-            android-app \
-            -type f \
-            -name "*.apk" \
-            -print
-
-          APK_PATH="$(
-            find \
-              android-app/app/build/outputs/apk/release \
-              -type f \
-              -name "*.apk" \
-              | head -n 1
-          )"
+          APK_PATH="$(find app/build/outputs/apk/release -type f -name "*.apk" | head -n 1)"
 
           if [ -z "$APK_PATH" ]; then
-
-              echo ""
-              echo "HATA: APK bulunamadı."
-
-              echo ""
-              echo "Build çıktıları:"
-
-              find \
-                android-app/app/build \
-                -type f \
-                -print || true
-
-              exit 1
+            echo "HATA: APK oluşturulamadı."
+            exit 1
           fi
 
-          echo ""
-          echo "Bulunan APK:"
-          echo "$APK_PATH"
+          echo "APK bulundu: $APK_PATH"
 
-          echo "apk_path=$APK_PATH" \
-            >> "$GITHUB_OUTPUT"
-
-
-      # ============================================================
-      # 18 — APK İMZASINI KONTROL ET
-      # ============================================================
-
-      - name: APK imzasını kontrol et
+      # --------------------------------------------------
+      # 20. APK'yı imzala
+      # Böylece telefona kurulabilir hale gelir.
+      # --------------------------------------------------
+      - name: APK'yı imzala
         shell: bash
         run: |
-          set -e
+          mkdir -p release
 
-          APK="${{ steps.find_apk.outputs.apk_path }}"
+          KEYSTORE="$RUNNER_TEMP/vaktimiz-pro.keystore"
 
-          echo "APK kontrol ediliyor:"
-          echo "$APK"
-
-          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
-
-          if [ ! -f "$APKSIGNER" ]; then
-
-              echo "apksigner bulunamadı."
-
-              exit 1
-          fi
-
-          "$APKSIGNER" verify --verbose "$APK"
-
-          echo ""
-          echo "========================================"
-          echo "APK İMZA KONTROLÜ BAŞARILI"
-          echo "========================================"
-
-
-      # ============================================================
-      # 19 — APK'YI SABİT İSİMLE HAZIRLA
-      # ============================================================
-
-      - name: APK'yı hazırla
-        shell: bash
-        run: |
-          set -e
-
-          mkdir -p apk-output
-
-          cp \
-            "${{ steps.find_apk.outputs.apk_path }}" \
-            "apk-output/Vaktimiz-Pro.apk"
-
-          echo ""
-          echo "APK hazır:"
-          ls -lh \
-            apk-output/Vaktimiz-Pro.apk
-
-
-      # ============================================================
-      # 20 — APK'YI GITHUB'A YÜKLE
-      # ============================================================
-
-      - name: APK'yı yükle
-        uses: actions/upload-artifact@v4
-        with:
-          name: Vaktimiz-Pro-APK
-          path: apk-output/Vaktimiz-Pro.apk
-          if-no-files-found: error
-          retention-days: 30
+          keytool \
+            -gen
