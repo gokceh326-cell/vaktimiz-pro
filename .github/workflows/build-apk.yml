@@ -13,128 +13,180 @@ jobs:
 
     steps:
 
-      # 1 - Kaynak kodu al
+      # 1. KAYNAK KODU AL
       - name: Kaynak kodu al
         uses: actions/checkout@v4
 
-      # 2 - Java 17
-      - name: Java 17 kurulumu
+      # 2. JAVA 21
+      - name: Java 21 kurulumu
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
-          cache: gradle
+          java-version: '21'
 
-      # 3 - Android SDK
+      # 3. ANDROID SDK
       - name: Android SDK kurulumu
         uses: android-actions/setup-android@v3
 
-      # 4 - Android SDK paketleri
+      # 4. GEREKLİ SDK PAKETLERİ
       - name: Android SDK paketlerini kur
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-
-      # 5 - Gradle wrapper kontrolü
-      - name: Gradle wrapper kontrolü
         shell: bash
         run: |
           set -e
 
-          if [ ! -f "gradlew" ]; then
-            echo "HATA: gradlew dosyası bulunamadı."
-            echo "Android projesinin kök dizininde gradlew bulunmalıdır."
-            exit 1
-          fi
+          yes | sdkmanager --licenses >/dev/null || true
 
-          chmod +x gradlew
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
-          echo "Gradle wrapper bulundu:"
-          ls -l gradlew
-
-      # 6 - Gradle projesini kontrol et
-      - name: Gradle projesini kontrol et
+      # 5. ANDROID PROJESİ OLUŞTUR
+      - name: Android projesini oluştur
         shell: bash
         run: |
           set -e
 
-          if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
-            echo "HATA: settings.gradle veya settings.gradle.kts bulunamadı."
-            exit 1
-          fi
+          rm -rf android-app
 
-          if [ ! -d "app" ]; then
-            echo "HATA: app klasörü bulunamadı."
-            exit 1
-          fi
+          mkdir -p android-app/app/src/main/java/com/vaktimiz/pro
+          mkdir -p android-app/app/src/main/assets
+          mkdir -p android-app/app/src/main/res/values
+          mkdir -p android-app/app/src/main/res/mipmap-hdpi
+          mkdir -p android-app/app/src/main/res/mipmap-mdpi
+          mkdir -p android-app/app/src/main/res/mipmap-xhdpi
+          mkdir -p android-app/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android-app/app/src/main/res/mipmap-xxxhdpi
 
-          echo "Android projesi bulundu."
-
-      # 7 - Temizle
-      - name: Gradle temizleme
-        run: |
-          ./gradlew clean
-
-      # 8 - DEBUG APK oluştur
-      # Özel keystore kullanılmıyor.
-      # Android debug imzasını otomatik kullanır.
-      - name: Debug APK oluştur
-        run: |
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon
-
-      # 9 - APK'yı bul
-      - name: APK dosyasını bul
+      # 6. SETTINGS.GRADLE
+      - name: settings.gradle oluştur
         shell: bash
         run: |
-          set -e
+          cat > android-app/settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
 
-          echo "APK dosyaları aranıyor..."
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
 
-          find . -type f -name "*.apk" -print
+          rootProject.name = "VaktimizPro"
+          include(":app")
+          EOF
 
-          APK=$(find app/build/outputs/apk -type f -name "*.apk" | head -n 1)
-
-          if [ -z "$APK" ]; then
-            echo "HATA: APK oluşturulamadı."
-            exit 1
-          fi
-
-          echo "Bulunan APK:"
-          echo "$APK"
-
-          mkdir -p release
-
-          cp "$APK" "release/Vaktimiz-Pro.apk"
-
-          echo "Hazır APK:"
-          ls -lh release/Vaktimiz-Pro.apk
-
-      # 10 - APK'yı GitHub'a yükle
-      - name: APK'yı yükle
-        uses: actions/upload-artifact@v4
-        with:
-          name: Vaktimiz-Pro-APK
-          path: release/Vaktimiz-Pro.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      # 11 - Son kontrol
-      - name: APK kontrolü
+      # 7. ANA GRADLE
+      - name: Ana Gradle dosyasını oluştur
         shell: bash
         run: |
-          set -e
+          cat > android-app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
 
-          test -f release/Vaktimiz-Pro.apk
+      # 8. GRADLE PROPERTIES
+      - name: Gradle özelliklerini oluştur
+        shell: bash
+        run: |
+          cat > android-app/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOF
 
-          SIZE=$(stat -c%s release/Vaktimiz-Pro.apk)
+      # 9. APP GRADLE
+      - name: App Gradle dosyasını oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
 
-          if [ "$SIZE" -le 10000 ]; then
-            echo "HATA: APK dosyası şüpheli derecede küçük."
-            exit 1
-          fi
+          android {
+              namespace 'com.vaktimiz.pro'
+              compileSdk 35
 
-          echo "================================"
-          echo "APK BAŞARIYLA OLUŞTURULDU"
-          echo "================================"
-          echo "Dosya: release/Vaktimiz-Pro.apk"
-          echo "Boyut: $SIZE byte"
+              defaultConfig {
+                  applicationId 'com.vaktimiz.pro'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      shrinkResources false
+                  }
+
+                  debug {
+                      minifyEnabled false
+                  }
+              }
+          }
+
+          dependencies {
+              implementation 'androidx.appcompat:appcompat:1.7.0'
+              implementation 'androidx.webkit:webkit:1.12.1'
+          }
+          EOF
+
+      # 10. MANIFEST
+      - name: AndroidManifest oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <application
+                  android:allowBackup="true"
+                  android:usesCleartextTraffic="true"
+                  android:label="Vaktimiz Pro"
+                  android:theme="@style/AppTheme"
+                  android:supportsRtl="true">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+
+                  </activity>
+
+              </application>
+
+          </manifest>
+          EOF
+
+      # 11. TEMA
+      - name: Android temasını oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/src/main/res/values/styles.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+
+          <resources>
+
+              <style name="AppTheme"
+                  parent="Theme.AppCompat.DayNight.NoActionBar">
+
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowActionMode
