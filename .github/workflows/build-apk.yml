@@ -1,389 +1,107 @@
-name: Vaktimiz Pro APK
+name: Vaktimiz Pro - APK Oluştur
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-apk:
+    name: APK Oluştur
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: GitHub Repository'yi Al
-        uses: actions/checkout@v4
+      # 1. Projeyi indir
+      - name: Kaynak kodunu al
+        uses: actions/checkout@v6
 
-      - name: Java 17 Kur
-        uses: actions/setup-java@v4
+      # 2. Java 17
+      - name: Java 17 kurulumu
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
+          cache: gradle
 
-      - name: Android SDK Kur
-        uses: android-actions/setup-android@v3
+      # 3. Gradle kurulumu ve önbellekleme
+      - name: Gradle kurulumu
+        uses: gradle/actions/setup-gradle@v6
 
-      - name: Android SDK Bilesenlerini Kur
+      # 4. Gradle Wrapper izinlerini düzelt
+      - name: Gradle Wrapper izinleri
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-35"
-          sdkmanager "build-tools;35.0.0"
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+          else
+            echo "HATA: gradlew bulunamadı."
+            echo "Proje dosyaları:"
+            find . -maxdepth 3 -type f | sort | head -200
+            exit 1
+          fi
 
-      - name: Android Projesini Olustur
+      # 5. Projeyi temizle
+      - name: Temizle
         run: |
+          ./gradlew clean --no-daemon
 
-          mkdir -p app/src/main/java/com/vaktimizpro/app
-          mkdir -p app/src/main/res/values
-
-          cat > settings.gradle <<'EOF'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-
-          rootProject.name = "VaktimizPro"
-          include ":app"
-          EOF
-
-          cat > build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application' version '8.7.3' apply false
-          }
-          EOF
-
-          cat > gradle.properties <<'EOF'
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-          android.useAndroidX=true
-          android.nonTransitiveRClass=true
-          EOF
-
-          cat > app/build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application'
-          }
-
-          android {
-              namespace 'com.vaktimizpro.app'
-              compileSdk 35
-
-              defaultConfig {
-                  applicationId 'com.vaktimizpro.app'
-                  minSdk 23
-                  targetSdk 35
-                  versionCode 1
-                  versionName '1.0'
-              }
-
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                      proguardFiles getDefaultProguardFile(
-                          'proguard-android-optimize.txt'
-                      ),
-                      'proguard-rules.pro'
-                  }
-              }
-          }
-          EOF
-
-          cat > app/proguard-rules.pro <<'EOF'
-          EOF
-
-          cat > app/src/main/res/values/styles.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-
-              <style
-                  name="AppTheme"
-                  parent="android:style/Theme.Material.Light.NoActionBar">
-
-                  <item name="android:fontFamily">sans</item>
-                  <item name="android:colorAccent">#08745B</item>
-                  <item name="android:navigationBarColor">#0B1210</item>
-                  <item name="android:statusBarColor">#0B6B55</item>
-                  <item name="android:windowLightStatusBar">false</item>
-
-              </style>
-
-          </resources>
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-
-          <manifest
-              xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <uses-permission
-                  android:name="android.permission.INTERNET" />
-
-              <uses-permission
-                  android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-              <uses-permission
-                  android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-              <application
-                  android:allowBackup="true"
-                  android:hardwareAccelerated="true"
-                  android:label="Vaktimiz Pro"
-                  android:supportsRtl="true"
-                  android:theme="@style/AppTheme">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:screenOrientation="portrait"
-                      android:exported="true">
-
-                      <intent-filter>
-
-                          <action
-                              android:name="android.intent.action.MAIN" />
-
-                          <category
-                              android:name="android.intent.category.LAUNCHER" />
-
-                      </intent-filter>
-
-                  </activity>
-
-              </application>
-
-          </manifest>
-          EOF
-
-          cat > app/src/main/java/com/vaktimizpro/app/MainActivity.java <<'EOF'
-          package com.vaktimizpro.app;
-
-          import android.Manifest;
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.content.pm.PackageManager;
-          import android.webkit.GeolocationPermissions;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-
-          public class MainActivity extends Activity {
-
-              private WebView webView;
-
-              private static final int LOCATION_PERMISSION = 1001;
-
-              private static final String APP_URL =
-                  "https://raw.githubusercontent.com/gokceh326-cell/vaktimiz-pro/main/index.html";
-
-              private GeolocationPermissions.Callback
-                  locationCallback;
-
-              private String locationOrigin;
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-
-                  super.onCreate(savedInstanceState);
-
-                  webView = new WebView(this);
-
-                  setContentView(webView);
-
-                  WebSettings settings =
-                      webView.getSettings();
-
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  settings.setDatabaseEnabled(true);
-
-                  settings.setGeolocationEnabled(true);
-
-                  settings.setAllowFileAccess(true);
-                  settings.setAllowContentAccess(true);
-
-                  settings.setBuiltInZoomControls(false);
-                  settings.setDisplayZoomControls(false);
-                  settings.setSupportZoom(false);
-
-                  settings.setMediaPlaybackRequiresUserGesture(false);
-
-                  webView.setWebViewClient(
-                      new WebViewClient()
-                  );
-
-                  webView.setWebChromeClient(
-                      new WebChromeClient() {
-
-                          @Override
-                          public void
-                          onGeolocationPermissionsShowPrompt(
-                              String origin,
-                              GeolocationPermissions.Callback callback) {
-
-                              if (
-                                  checkSelfPermission(
-                                      Manifest.permission
-                                      .ACCESS_FINE_LOCATION
-                                  ) ==
-                                  PackageManager.PERMISSION_GRANTED
-                                  ||
-                                  checkSelfPermission(
-                                      Manifest.permission
-                                      .ACCESS_COARSE_LOCATION
-                                  ) ==
-                                  PackageManager.PERMISSION_GRANTED
-                              ) {
-
-                                  callback.invoke(
-                                      origin,
-                                      true,
-                                      false
-                                  );
-
-                              } else {
-
-                                  locationOrigin = origin;
-                                  locationCallback = callback;
-
-                                  requestPermissions(
-                                      new String[] {
-                                          Manifest.permission
-                                          .ACCESS_FINE_LOCATION,
-
-                                          Manifest.permission
-                                          .ACCESS_COARSE_LOCATION
-                                      },
-                                      LOCATION_PERMISSION
-                                  );
-                              }
-                          }
-                      }
-                  );
-
-                  if (
-                      checkSelfPermission(
-                          Manifest.permission
-                          .ACCESS_FINE_LOCATION
-                      ) != PackageManager.PERMISSION_GRANTED
-                      &&
-                      checkSelfPermission(
-                          Manifest.permission
-                          .ACCESS_COARSE_LOCATION
-                      ) != PackageManager.PERMISSION_GRANTED
-                  ) {
-
-                      requestPermissions(
-                          new String[] {
-                              Manifest.permission
-                              .ACCESS_FINE_LOCATION,
-
-                              Manifest.permission
-                              .ACCESS_COARSE_LOCATION
-                          },
-                          LOCATION_PERMISSION
-                      );
-                  }
-
-                  webView.loadUrl(APP_URL);
-              }
-
-              @Override
-              public void onRequestPermissionsResult(
-                  int requestCode,
-                  String[] permissions,
-                  int[] grantResults) {
-
-                  super.onRequestPermissionsResult(
-                      requestCode,
-                      permissions,
-                      grantResults
-                  );
-
-                  if (
-                      requestCode ==
-                      LOCATION_PERMISSION
-                      &&
-                      locationCallback != null
-                  ) {
-
-                      boolean granted = false;
-
-                      for (int result : grantResults) {
-
-                          if (
-                              result ==
-                              PackageManager.PERMISSION_GRANTED
-                          ) {
-
-                              granted = true;
-                              break;
-                          }
-                      }
-
-                      locationCallback.invoke(
-                          locationOrigin,
-                          granted,
-                          false
-                      );
-
-                      locationCallback = null;
-                      locationOrigin = null;
-                  }
-              }
-
-              @Override
-              public void onBackPressed() {
-
-                  if (
-                      webView != null &&
-                      webView.canGoBack()
-                  ) {
-
-                      webView.goBack();
-
-                  } else {
-
-                      super.onBackPressed();
-                  }
-              }
-
-              @Override
-              protected void onDestroy() {
-
-                  if (webView != null) {
-
-                      webView.stopLoading();
-                      webView.destroy();
-                  }
-
-                  super.onDestroy();
-              }
-          }
-          EOF
-
-      - name: Gradle Kur
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
-
-      - name: APK Olustur
+      # 6. Release APK oluştur
+      - name: Release APK oluştur
         run: |
-          gradle assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: APKyi GitHub'a Yukle
+      # 7. Oluşan APK'yı kesin olarak bul
+      - name: APK dosyasını kontrol et
+        shell: bash
+        run: |
+          echo "======================================"
+          echo "APK DOSYALARI"
+          echo "======================================"
+
+          find . -type f -name "*.apk" -print
+
+          APK_COUNT=$(find . -type f -name "*.apk" | wc -l)
+
+          if [ "$APK_COUNT" -eq 0 ]; then
+            echo ""
+            echo "HATA: APK oluşturulamadı veya bulunamadı."
+            echo ""
+            echo "build klasörleri:"
+            find . -type d -name "build" -print
+            echo ""
+            echo "APK çıktıları:"
+            find . -type d -path "*/outputs/*" -print
+            exit 1
+          fi
+
+          echo ""
+          echo "Bulunan APK sayısı: $APK_COUNT"
+
+      # 8. APK'yı tek bir klasörde topla
+      - name: APK'yı paketle
+        shell: bash
+        run: |
+          mkdir -p apk-output
+
+          find . \
+            -type f \
+            -name "*.apk" \
+            -not -path "./apk-output/*" \
+            -exec cp {} apk-output/VaktimizPro.apk \;
+
+          echo ""
+          echo "APK hazır:"
+          ls -lh apk-output/
+
+      # 9. APK'yı GitHub Actions Artifacts olarak yükle
+      - name: APK'yı yükle
         uses: actions/upload-artifact@v4
         with:
-          name: Vaktimiz-Pro-APK
-          path: app/build/outputs/apk/release/app-release.apk
+          name: VaktimizPro-APK
+          path: apk-output/VaktimizPro.apk
+          if-no-files-found: error
+          retention-days: 30
