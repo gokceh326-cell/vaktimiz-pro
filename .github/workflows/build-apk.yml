@@ -1,10 +1,10 @@
 name: Vaktimiz Pro APK Oluştur
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build:
@@ -12,43 +12,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # 1. Kodu al
       - name: Kaynak kodu al
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # 2. Java 21
       - name: Java 21 kurulumu
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
 
-      # 3. Android SDK
       - name: Android SDK kurulumu
         uses: android-actions/setup-android@v3
 
-      # 4. Android SDK paketlerini kur
       - name: Android SDK paketlerini kur
         shell: bash
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
-      # 5. Android projesini oluştur
+      - name: Gradle kurulumu
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
       - name: Android projesini oluştur
         shell: bash
         run: |
           set -e
 
-          mkdir -p app/src/main/java/com/vaktimiz/pro
-          mkdir -p app/src/main/assets
+          APP_DIR="$GITHUB_WORKSPACE/android-app"
 
-      # 6. settings.gradle oluştur
-      - name: settings.gradle oluştur
-        shell: bash
-        run: |
-          cat > settings.gradle <<'EOF'
+          rm -rf "$APP_DIR"
+
+          mkdir -p "$APP_DIR/app/src/main/java/com/vaktimizpro"
+          mkdir -p "$APP_DIR/app/src/main/assets"
+
+          cat > "$APP_DIR/settings.gradle" <<'EOF'
           pluginManagement {
               repositories {
                   google()
@@ -69,41 +72,29 @@ jobs:
           include(":app")
           EOF
 
-      # 7. Ana Gradle dosyası
-      - name: Ana Gradle dosyasını oluştur
-        shell: bash
-        run: |
-          cat > build.gradle <<'EOF'
+          cat > "$APP_DIR/build.gradle" <<'EOF'
           plugins {
               id 'com.android.application' version '8.7.3' apply false
           }
           EOF
 
-      # 8. Gradle özellikleri
-      - name: Gradle özelliklerini oluştur
-        shell: bash
-        run: |
-          cat > gradle.properties <<'EOF'
+          cat > "$APP_DIR/gradle.properties" <<'EOF'
           org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
           android.useAndroidX=true
           android.nonTransitiveRClass=true
           EOF
 
-      # 9. App Gradle dosyası
-      - name: App Gradle dosyasını oluştur
-        shell: bash
-        run: |
-          cat > app/build.gradle <<'EOF'
+          cat > "$APP_DIR/app/build.gradle" <<'EOF'
           plugins {
               id 'com.android.application'
           }
 
           android {
-              namespace 'com.vaktimiz.pro'
+              namespace 'com.vaktimizpro'
               compileSdk 35
 
               defaultConfig {
-                  applicationId 'com.vaktimiz.pro'
+                  applicationId 'com.vaktimizpro'
                   minSdk 23
                   targetSdk 35
                   versionCode 1
@@ -111,21 +102,28 @@ jobs:
               }
 
               buildTypes {
+                  debug {
+                      minifyEnabled false
+                  }
+
                   release {
                       minifyEnabled false
-                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                   }
               }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_21
+                  targetCompatibility JavaVersion.VERSION_21
+              }
+          }
+
+          dependencies {
+              implementation 'androidx.appcompat:appcompat:1.7.0'
+              implementation 'androidx.webkit:webkit:1.12.1'
           }
           EOF
 
-      # 10. Manifest
-      - name: AndroidManifest oluştur
-        shell: bash
-        run: |
-          mkdir -p app/src/main
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          cat > "$APP_DIR/app/src/main/AndroidManifest.xml" <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -133,9 +131,10 @@ jobs:
 
               <application
                   android:allowBackup="true"
+                  android:usesCleartextTraffic="true"
                   android:label="Vaktimiz Pro"
-                  android:supportsRtl="true"
-                  android:theme="@style/AppTheme">
+                  android:theme="@style/AppTheme"
+                  android:supportsRtl="true">
 
                   <activity
                       android:name=".MainActivity"
@@ -153,18 +152,54 @@ jobs:
           </manifest>
           EOF
 
-      # 11. Tema
-      - name: Android teması oluştur
-        shell: bash
-        run: |
-          mkdir -p app/src/main/res/values
+          mkdir -p "$APP_DIR/app/src/main/res/values"
 
-          cat > app/src/main/res/values/styles.xml <<'EOF'
+          cat > "$APP_DIR/app/src/main/res/values/styles.xml" <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
 
-              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+              <style name="AppTheme"
+                  parent="android:style/Theme.Material.Light.NoActionBar">
+
                   <item name="android:fontFamily">sans</item>
                   <item name="android:windowActionModeOverlay">true</item>
                   <item name="android:colorAccent">#6750A4</item>
-                  <item name="android
+                  <item name="android:navigationBarColor">#000000</item>
+                  <item name="android:statusBarColor">#000000</item>
+                  <item name="android:windowLightStatusBar">false</item>
+
+              </style>
+
+          </resources>
+          EOF
+
+          cat > "$APP_DIR/app/src/main/java/com/vaktimizpro/MainActivity.java" <<'EOF'
+          package com.vaktimizpro;
+
+          import android.annotation.SuppressLint;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+
+              private WebView webView;
+
+              @SuppressLint("SetJavaScriptEnabled")
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  webView = new WebView(this);
+                  setContentView(webView);
+
+                  WebSettings settings = webView.getSettings();
+
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setMediaPlaybackRequires
