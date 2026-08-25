@@ -1,10 +1,10 @@
 name: Vaktimiz Pro APK Oluştur
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,56 +13,42 @@ jobs:
 
     steps:
 
-      # 1. KAYNAK KODU AL
+      # 1. Kodu al
       - name: Kaynak kodu al
         uses: actions/checkout@v4
 
-      # 2. JAVA 21
+      # 2. Java 21
       - name: Java 21 kurulumu
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
-      # 3. ANDROID SDK
+      # 3. Android SDK
       - name: Android SDK kurulumu
         uses: android-actions/setup-android@v3
 
-      # 4. GEREKLİ SDK PAKETLERİ
+      # 4. Android SDK paketlerini kur
       - name: Android SDK paketlerini kur
         shell: bash
         run: |
-          set -e
-
           yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-          sdkmanager \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
-
-      # 5. ANDROID PROJESİ OLUŞTUR
+      # 5. Android projesini oluştur
       - name: Android projesini oluştur
         shell: bash
         run: |
           set -e
 
-          rm -rf android-app
+          mkdir -p app/src/main/java/com/vaktimiz/pro
+          mkdir -p app/src/main/assets
 
-          mkdir -p android-app/app/src/main/java/com/vaktimiz/pro
-          mkdir -p android-app/app/src/main/assets
-          mkdir -p android-app/app/src/main/res/values
-          mkdir -p android-app/app/src/main/res/mipmap-hdpi
-          mkdir -p android-app/app/src/main/res/mipmap-mdpi
-          mkdir -p android-app/app/src/main/res/mipmap-xhdpi
-          mkdir -p android-app/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android-app/app/src/main/res/mipmap-xxxhdpi
-
-      # 6. SETTINGS.GRADLE
+      # 6. settings.gradle oluştur
       - name: settings.gradle oluştur
         shell: bash
         run: |
-          cat > android-app/settings.gradle <<'EOF'
+          cat > settings.gradle <<'EOF'
           pluginManagement {
               repositories {
                   google()
@@ -83,31 +69,31 @@ jobs:
           include(":app")
           EOF
 
-      # 7. ANA GRADLE
+      # 7. Ana Gradle dosyası
       - name: Ana Gradle dosyasını oluştur
         shell: bash
         run: |
-          cat > android-app/build.gradle <<'EOF'
+          cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.7.3' apply false
           }
           EOF
 
-      # 8. GRADLE PROPERTIES
+      # 8. Gradle özellikleri
       - name: Gradle özelliklerini oluştur
         shell: bash
         run: |
-          cat > android-app/gradle.properties <<'EOF'
+          cat > gradle.properties <<'EOF'
           org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
           android.useAndroidX=true
           android.nonTransitiveRClass=true
           EOF
 
-      # 9. APP GRADLE
+      # 9. App Gradle dosyası
       - name: App Gradle dosyasını oluştur
         shell: bash
         run: |
-          cat > android-app/app/build.gradle <<'EOF'
+          cat > app/build.gradle <<'EOF'
           plugins {
               id 'com.android.application'
           }
@@ -127,38 +113,29 @@ jobs:
               buildTypes {
                   release {
                       minifyEnabled false
-                      shrinkResources false
-                  }
-
-                  debug {
-                      minifyEnabled false
+                      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                   }
               }
           }
-
-          dependencies {
-              implementation 'androidx.appcompat:appcompat:1.7.0'
-              implementation 'androidx.webkit:webkit:1.12.1'
-          }
           EOF
 
-      # 10. MANIFEST
+      # 10. Manifest
       - name: AndroidManifest oluştur
         shell: bash
         run: |
-          cat > android-app/app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
+          mkdir -p app/src/main
 
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
               <uses-permission android:name="android.permission.INTERNET" />
 
               <application
                   android:allowBackup="true"
-                  android:usesCleartextTraffic="true"
                   android:label="Vaktimiz Pro"
-                  android:theme="@style/AppTheme"
-                  android:supportsRtl="true">
+                  android:supportsRtl="true"
+                  android:theme="@style/AppTheme">
 
                   <activity
                       android:name=".MainActivity"
@@ -176,17 +153,18 @@ jobs:
           </manifest>
           EOF
 
-      # 11. TEMA
-      - name: Android temasını oluştur
+      # 11. Tema
+      - name: Android teması oluştur
         shell: bash
         run: |
-          cat > android-app/app/src/main/res/values/styles.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
+          mkdir -p app/src/main/res/values
 
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
           <resources>
 
-              <style name="AppTheme"
-                  parent="Theme.AppCompat.DayNight.NoActionBar">
-
+              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
                   <item name="android:fontFamily">sans</item>
-                  <item name="android:windowActionMode
+                  <item name="android:windowActionModeOverlay">true</item>
+                  <item name="android:colorAccent">#6750A4</item>
+                  <item name="android
