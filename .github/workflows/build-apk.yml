@@ -6,8 +6,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  build-apk:
+    name: Android APK Derleme
     runs-on: ubuntu-latest
 
     steps:
@@ -26,32 +30,68 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Android projesini oluştur
+      - name: Proje klasörlerini hazırla
         shell: bash
         run: |
           set -e
 
-          rm -rf app
-          rm -f build.gradle settings.gradle gradle.properties
-
-          mkdir -p app/src/main/java/com/vaktimizpro/app
-          mkdir -p app/src/main/res/values
-          mkdir -p app/src/main/assets
-
-          if [ ! -f index.html ]; then
-            echo "HATA: index.html bulunamadı."
+          if [ ! -f "index.html" ]; then
+            echo "HATA: Ana dizinde index.html bulunamadı."
             exit 1
           fi
 
-          cp index.html app/src/main/assets/index.html
+          rm -rf android-app
 
-          for item in css js assets images img fonts videos audio; do
-            if [ -e "$item" ]; then
-              cp -R "$item" app/src/main/assets/
-            fi
+          mkdir -p android-app/app/src/main/assets
+          mkdir -p android-app/app/src/main/java/com/vaktimizpro/app
+          mkdir -p android-app/app/src/main/res/values
+
+      - name: Web dosyalarını APK içine kopyala
+        shell: bash
+        run: |
+          set -e
+
+          cp "index.html" \
+             "android-app/app/src/main/assets/index.html"
+
+          shopt -s dotglob nullglob
+
+          for item in *; do
+            case "$item" in
+              .git)
+                ;;
+              .github)
+                ;;
+              android-app)
+                ;;
+              node_modules)
+                ;;
+              build)
+                ;;
+              release)
+                ;;
+              app)
+                ;;
+              gradle)
+                ;;
+              *)
+                if [ -d "$item" ]; then
+                  cp -R "$item" \
+                    "android-app/app/src/main/assets/"
+                elif [ -f "$item" ]; then
+                  if [ "$item" != "index.html" ]; then
+                    cp "$item" \
+                      "android-app/app/src/main/assets/"
+                  fi
+                fi
+                ;;
+            esac
           done
 
-          cat > settings.gradle <<'GRADLE'
+      - name: settings.gradle oluştur
+        shell: bash
+        run: |
+          cat > android-app/settings.gradle <<'EOF'
 pluginManagement {
     repositories {
         google()
@@ -72,19 +112,29 @@ dependencyResolutionManagement {
 rootProject.name = "VaktimizPro"
 
 include ":app"
-GRADLE
+EOF
 
-          cat > build.gradle <<'GRADLE'
+      - name: Ana Gradle dosyasını oluştur
+        shell: bash
+        run: |
+          cat > android-app/build.gradle <<'EOF'
 plugins {
     id "com.android.application" version "8.7.3" apply false
 }
-GRADLE
+EOF
 
-          cat > gradle.properties <<'PROPS'
+      - name: Gradle özelliklerini oluştur
+        shell: bash
+        run: |
+          cat > android-app/gradle.properties <<'EOF'
 org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-PROPS
+android.useAndroidX=true
+EOF
 
-          cat > app/build.gradle <<'GRADLE'
+      - name: Android build.gradle oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/build.gradle <<'EOF'
 plugins {
     id "com.android.application"
 }
@@ -104,35 +154,21 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-        }
-
-        release {
-            minifyEnabled false
             shrinkResources false
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
 }
-GRADLE
+EOF
 
-          cat > app/src/main/res/values/styles.xml <<'XML'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <style
-        name="AppTheme"
-        parent="android:style/Theme.Material.Light.NoActionBar">
-
-        <item name="android:fontFamily">sans</item>
-        <item name="android:statusBarColor">#000000</item>
-        <item name="android:navigationBarColor">#000000</item>
-        <item name="android:windowLightStatusBar">false</item>
-
-    </style>
-
-</resources>
-XML
-
-          cat > app/src/main/AndroidManifest.xml <<'XML'
+      - name: AndroidManifest oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/src/main/AndroidManifest.xml <<'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -165,9 +201,36 @@ XML
     </application>
 
 </manifest>
-XML
+EOF
 
-          cat > app/src/main/java/com/vaktimizpro/app/MainActivity.java <<'JAVA'
+      - name: Android temasını oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/src/main/res/values/styles.xml <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <style
+        name="AppTheme"
+        parent="android:style/Theme.Material.Light.NoActionBar">
+
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+
+    </style>
+
+</resources>
+EOF
+
+      - name: MainActivity oluştur
+        shell: bash
+        run: |
+          cat > android-app/app/src/main/java/com/vaktimizpro/app/MainActivity.java <<'EOF'
 package com.vaktimizpro.app;
 
 import android.app.Activity;
@@ -199,76 +262,111 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(true);
 
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
-
         settings.setMediaPlaybackRequiresUserGesture(false);
-
-        settings.setBuiltInZoomControls(false);
-        settings.setDisplayZoomControls(false);
 
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
-        webView.loadUrl(
-            "file:///android_asset/index.html"
-        );
+        webView.loadUrl("file:///android_asset/index.html");
     }
 
     @Override
     public void onBackPressed() {
 
         if (webView != null && webView.canGoBack()) {
-
             webView.goBack();
-
         } else {
-
             super.onBackPressed();
-
         }
     }
 }
-JAVA
+EOF
 
       - name: Gradle 8.9 indir
         shell: bash
         run: |
           set -e
 
-          curl -fsSL \
-            -o /tmp/gradle.zip \
-            https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          curl -fL \
+            "https://services.gradle.org/distributions/gradle-8.9-bin.zip" \
+            -o "/tmp/gradle-8.9-bin.zip"
 
-          unzip -q /tmp/gradle.zip -d /tmp
+          rm -rf "/tmp/gradle-8.9"
 
-          /tmp/gradle-8.9/bin/gradle --version
+          unzip -q \
+            "/tmp/gradle-8.9-bin.zip" \
+            -d "/tmp"
 
-      - name: APK oluştur
+          "/tmp/gradle-8.9/bin/gradle" --version
+
+      - name: Android projesini kontrol et
         shell: bash
+        working-directory: android-app
         run: |
           set -e
 
-          /tmp/gradle-8.9/bin/gradle \
+          echo "Android proje yapısı:"
+          find . -maxdepth 5 -type f | sort
+
+      - name: APK oluştur
+        shell: bash
+        working-directory: android-app
+        run: |
+          set -e
+
+          "/tmp/gradle-8.9/bin/gradle" \
             --no-daemon \
             --stacktrace \
             :app:assembleDebug
 
-      - name: APK kontrol et
+      - name: APK dosyasını kontrol et
         shell: bash
         run: |
           set -e
 
-          APK="app/build/outputs/apk/debug/app-debug.apk"
+          APK_PATH="android-app/app/build/outputs/apk/debug/app-debug.apk"
 
-          if [ ! -f "$APK" ]; then
-            echo "HATA: APK oluşturulamadı."
+          if [ ! -f "$APK_PATH" ]; then
+            echo "HATA: APK bulunamadı."
+            echo "Oluşan dosyalar:"
+            find android-app -type f | sort
             exit 1
           fi
 
+          echo "APK bulundu:"
+          ls -lh "$APK_PATH"
+
+      - name: APK imzasını doğrula
+        shell: bash
+        run: |
+          set -e
+
+          APK_PATH="android-app/app/build/outputs/apk/debug/app-debug.apk"
+
+          APKSIGNER="$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner"
+
+          if [ ! -f "$APKSIGNER" ]; then
+            echo "HATA: apksigner bulunamadı."
+            exit 1
+          fi
+
+          "$APKSIGNER" verify \
+            --verbose \
+            "$APK_PATH"
+
+      - name: APK'yı paketle
+        shell: bash
+        run: |
+          set -e
+
+          rm -rf release
+
           mkdir -p release
 
-          cp "$APK" "release/Vaktimiz-Pro.apk"
+          cp \
+            "android-app/app/build/outputs/apk/debug/app-debug.apk" \
+            "release/Vaktimiz-Pro.apk"
 
-          echo "APK başarıyla bulundu:"
           ls -lh "release/Vaktimiz-Pro.apk"
 
       - name: APK'yı yükle
