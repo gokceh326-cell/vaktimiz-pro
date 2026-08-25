@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b6b55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Vaktimiz Pro</title>
+
+<style>
+:root{
+ --bg:#f5f8f6;
+ --card:#fff;
+ --text:#17231f;
+ --muted:#73817b;
+ --primary:#08745b;
+ --primary2:#13a17d;
+ --soft:#eaf6f1;
+ --gold:#c69a45;
+ --danger:#c64b4b;
+ --border:#e2e9e5;
+ --shadow:0 12px 35px rgba(20,50,40,.07);
+ --radius:24px;
+ --arabic:31px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,select{font:inherit}
+button{border:0;cursor:pointer}
+button:active{transform:scale(.97)}
+.app{max-width:720px;margin:auto;min-height:100vh;padding-bottom:90px}
+header{
+ position:sticky;top:0;z-index:100;
+ background:rgba(245,248,246,.92);
+ backdrop-filter:blur(18px);
+ border-bottom:1px solid var(--border);
+}
+.head{
+ height:68px;padding:0 16px;
+ display:flex;align-items:center;justify-content:space-between;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{
+ width:44px;height:44px;border-radius:15px;
+ display:grid;place-items:center;color:#fff;font-size:24px;
+ background:linear-gradient(145deg,var(--primary2),var(--primary));
+ box-shadow:0 8px 22px rgba(8,116,91,.2);
+}
+.brand b{display:block;font-size:17px}
+.brand small{color:var(--muted);font-size:10px}
+.head-actions{display:flex;gap:7px}
+.icon{
+ width:42px;height:42px;border-radius:14px;
+ background:var(--card);color:var(--text);
+ border:1px solid var(--border);
+}
+main{padding:15px}
+.page{display:none}
+.page.active{display:block}
+
+.hero{
+ color:white;border-radius:28px;padding:23px 20px;
+ background:
+ radial-gradient(circle at 95% 5%,rgba(255,255,255,.16),transparent 30%),
+ linear-gradient(145deg,#118667,#064d3d);
+ box-shadow:var(--shadow);overflow:hidden;position:relative;
+}
+.hero:after{
+ content:"۞";position:absolute;right:-15px;bottom:-30px;
+ font-family:serif;font-size:160px;opacity:.06;
+}
+.hero-label{font-size:11px;letter-spacing:1.5px;opacity:.75}
+.hero h1{margin:6px 0;font-size:27px}
+.hero p{margin:0;opacity:.83;font-size:12px}
+.date{
+ margin-top:16px;display:flex;justify-content:space-between;
+ align-items:center;position:relative;z-index:2;
+}
+.date b{font-size:13px}.date span{font-size:11px;opacity:.75}
+
+.location{
+ margin-top:12px;display:flex;align-items:center;gap:8px;
+ color:white;font-size:12px;opacity:.9;
+}
+
+.next{
+ margin-top:15px;background:var(--card);color:var(--text);
+ border-radius:24px;padding:18px;box-shadow:var(--shadow);
+}
+.next-top{display:flex;justify-content:space-between;align-items:center}
+.next-top small{color:var(--muted)}
+.next-name{font-size:24px;font-weight:850;margin-top:4px}
+.countdown{font-size:14px;color:var(--primary);font-weight:800}
+.progress{height:7px;background:#edf1ef;border-radius:20px;margin-top:14px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--primary2));border-radius:20px}
+
+.times{
+ margin-top:13px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+.time{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:18px;padding:13px 9px;text-align:center;
+}
+.time.active{border-color:var(--primary);background:var(--soft)}
+.time small{display:block;color:var(--muted);font-size:10px}
+.time b{display:block;font-size:18px;margin-top:3px}
+
+.section-title{
+ margin:25px 3px 11px;font-size:18px;font-weight:850;
+ display:flex;justify-content:space-between;align-items:center;
+}
+.section-title span{font-size:11px;color:var(--primary);font-weight:700}
+
+.card{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:var(--radius);padding:19px;box-shadow:var(--shadow);
+}
+
+.daily-title{font-weight:850}
+.daily-ar{
+ direction:rtl;text-align:center;font-family:"Amiri","Noto Naskh Arabic",serif;
+ font-size:28px;line-height:2;margin:16px 0 8px;
+}
+.daily-tr{text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+.primary{
+ width:100%;padding:14px;border-radius:15px;
+ background:var(--primary);color:#fff;font-weight:800;margin-top:14px;
+}
+.secondary{
+ width:100%;padding:13px;border-radius:15px;
+ background:var(--soft);color:var(--primary);font-weight:800;margin-top:9px;
+}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feature{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:20px;padding:17px;min-height:115px;
+}
+.feature-icon{font-size:26px}
+.feature b{display:block;margin-top:8px}
+.feature small{display:block;color:var(--muted);margin-top:3px;font-size:11px}
+
+.search{
+ display:flex;gap:8px;margin-bottom:12px;
+}
+.search input{
+ flex:1;min-width:0;padding:14px;border-radius:15px;
+ border:1px solid var(--border);background:var(--card);outline:none;color:var(--text);
+}
+.search button{width:50px;border-radius:15px;background:var(--primary);color:#fff}
+
+.surah-list{display:grid;gap:8px}
+.surah{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:18px;padding:12px;display:flex;align-items:center;gap:12px;
+}
+.surah-num{
+ width:40px;height:40px;border-radius:13px;background:var(--soft);
+ color:var(--primary);display:grid;place-items:center;font-weight:850;font-size:12px;
+}
+.surah-info{flex:1}.surah-info b{display:block;font-size:14px}
+.surah-info small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.surah-ar{
+ direction:rtl;font-family:"Amiri","Noto Naskh Arabic",serif;font-size:22px;
+}
+
+.reader-top{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.back,.reader-btn{
+ width:43px;height:43px;border-radius:14px;background:var(--card);
+ border:1px solid var(--border);color:var(--text);
+}
+.reader-title{flex:1}.reader-title b{display:block}.reader-title small{color:var(--muted)}
+.reader-actions{display:flex;gap:5px}
+
+.cover{
+ text-align:center;padding:25px;border-radius:25px;
+ background:radial-gradient(circle,rgba(198,154,69,.13),transparent 55%),var(--card);
+ border:1px solid var(--border);margin-bottom:13px;
+}
+.cover-ar{
+ direction:rtl;font-family:"Amiri","Noto Naskh Arabic",serif;
+ font-size:40px;color:var(--primary);
+}
+.cover small{color:var(--muted)}
+.bismillah{
+ direction:rtl;text-align:center;font-family:"Amiri","Noto Naskh Arabic",serif;
+ font-size:27px;color:var(--primary);margin:20px 0;
+}
+.ayah{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:21px;padding:17px;margin-bottom:9px;
+}
+.ayah-head{display:flex;justify-content:space-between;align-items:center}
+.ayah-no{
+ width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+ background:var(--soft);color:var(--primary);font-size:10px;font-weight:850;
+}
+.ayah-actions{display:flex;gap:3px}
+.ayah-actions button{
+ width:31px;height:31px;border-radius:9px;background:transparent;color:var(--muted)
+}
+.ayah-text{
+ direction:rtl;text-align:right;font-family:"Amiri","Noto Naskh Arabic",serif;
+ font-size:var(--arabic);line-height:2.3;margin-top:12px;
+}
+.meal{display:none;color:var(--muted);font-size:13px;line-height:1.9;margin-top:12px}
+.show-meal .meal{display:block}
+
+.prayer-location{
+ display:flex;gap:8px;align-items:center;
+}
+.prayer-location input{
+ flex:1;padding:13px;border:1px solid var(--border);
+ background:var(--card);border-radius:14px;color:var(--text);
+}
+.small-btn{
+ padding:12px 13px;border-radius:13px;background:var(--primary);color:#fff;font-weight:700;
+}
+.prayer-table{display:grid;gap:8px;margin-top:12px}
+.prayer-row{
+ display:flex;justify-content:space-between;align-items:center;
+ padding:15px;background:var(--card);border:1px solid var(--border);
+ border-radius:17px;
+}
+.prayer-row.active{background:var(--soft);border-color:var(--primary)}
+.prayer-row small{color:var(--muted)}
+.prayer-row b{font-size:18px}
+
+.quote{
+ font-family:Georgia,serif;line-height:1.9;
+ font-size:16px;
+}
+.quote-source{color:var(--primary);font-weight:750;font-size:12px;margin-top:10px}
+
+.dhikr{
+ text-align:center;
+ background:linear-gradient(145deg,#0b6b55,#06483a);
+ color:#fff;border-radius:27px;padding:25px;
+}
+.dhikr-count{font-size:70px;font-weight:200;margin:12px}
+.dhikr-word{font-family:"Amiri",serif;font-size:29px;direction:rtl}
+.dhikr button{
+ width:105px;height:105px;border-radius:50%;
+ background:#fff;color:var(--primary);font-size:23px;font-weight:850;
+ box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+.dhikr-controls{display:flex;justify-content:center;gap:8px;margin-top:15px}
+.dhikr-controls button{width:auto;height:auto;padding:9px 14px;border-radius:12px;font-size:12px}
+
+.qibla{
+ text-align:center;padding:20px;background:var(--card);
+ border:1px solid var(--border);border-radius:25px;
+}
+.compass{
+ width:210px;height:210px;border-radius:50%;
+ margin:18px auto;border:9px solid var(--soft);
+ position:relative;display:grid;place-items:center;
+ background:radial-gradient(circle,#fff 0 30%,#edf7f3 31% 32%,#fff 33%);
+}
+.compass .needle{
+ position:absolute;width:5px;height:82px;
+ background:linear-gradient(var(--danger) 50%,#444 50%);
+ border-radius:5px;transform-origin:50% 50%;
+}
+.compass .center{width:14px;height:14px;border-radius:50%;background:var(--primary);z-index:2}
+.degree{font-size:25px;font-weight:850;color:var(--primary)}
+
+.dua{
+ padding:17px;background:var(--card);border:1px solid var(--border);
+ border-radius:20px;margin-bottom:9px;
+}
+.dua-ar{
+ direction:rtl;text-align:right;font-family:"Amiri",serif;
+ font-size:25px;line-height:2;
+}
+.dua-tr{color:var(--muted);font-size:13px;line-height:1.8;margin-top:8px}
+
+.ramadan{
+ background:linear-gradient(145deg,#122d28,#064d3d);
+ color:#fff;border-radius:25px;padding:20px;
+}
+.ramadan h2{margin:5px 0}
+.ramadan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}
+.ramadan-box{background:rgba(255,255,255,.1);padding:13px;border-radius:14px}
+.ramadan-box small{display:block;opacity:.7}.ramadan-box b{font-size:20px}
+
+.settings-list{display:grid;gap:8px}
+.setting{
+ background:var(--card);border:1px solid var(--border);
+ padding:15px;border-radius:17px;
+}
+.setting label{display:block;font-weight:750;margin-bottom:8px}
+.setting select,.setting input[type=range]{width:100%}
+
+.modal{
+ display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+ z-index:500;align-items:flex-end;
+}
+.modal.active{display:flex}
+.sheet{
+ width:min(720px,100%);max-height:90vh;overflow:auto;
+ margin:auto;background:var(--card);border-radius:28px 28px 0 0;padding:20px;
+}
+.sheet h2{margin-top:0}
+.close{
+ width:100%;padding:13px;border-radius:14px;
+ background:#edf0ef;color:var(--text);font-weight:800;margin-top:10px;
+}
+
+.bottom{
+ position:fixed;left:50%;transform:translateX(-50%);bottom:0;
+ width:min(720px,100%);z-index:200;
+ background:rgba(255,255,255,.95);backdrop-filter:blur(18px);
+ border-top:1px solid var(--border);
+ display:grid;grid-template-columns:repeat(5,1fr);
+ padding:7px 5px;
+}
+.nav{
+ background:transparent;color:var(--muted);font-size:9px;padding:5px 2px;border-radius:12px;
+}
+.nav.active{color:var(--primary);background:var(--soft);font-weight:800}
+.nav i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+
+.toast{
+ position:fixed;z-index:1000;left:50%;bottom:82px;
+ transform:translate(-50%,20px);opacity:0;
+ background:#17231f;color:#fff;padding:11px 16px;border-radius:13px;
+ font-size:12px;transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.loader{
+ position:fixed;z-index:9999;inset:0;background:var(--bg);
+ display:grid;place-items:center;transition:.3s;
+}
+.loader-box{text-align:center}
+.loader-logo{
+ width:75px;height:75px;border-radius:25px;background:var(--primary);
+ color:#fff;display:grid;place-items:center;font-size:38px;margin:auto;
+}
+.spinner{
+ width:28px;height:28px;border:3px solid #dce8e3;
+ border-top-color:var(--primary);border-radius:50%;
+ animation:spin .8s linear infinite;margin:17px auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.dark{
+ --bg:#0b1210;--card:#121d19;--text:#edf5f1;
+ --muted:#9aa8a2;--border:#26352f;--soft:#12352c;
+ --shadow:0 12px 35px rgba(0,0,0,.25);
+}
+.dark header{background:rgba(11,18,16,.92)}
+.dark .bottom{background:rgba(18,29,25,.95)}
+
+.theme2{
+ --primary:#6b4e9b;
+ --primary2:#9271c5;
+ --soft:#f1ecf8;
+}
+.theme3{
+ --primary:#1d5d8c;
+ --primary2:#338fc9;
+ --soft:#eaf3fa;
+}
+.theme4{
+ --primary:#9a6741;
+ --primary2:#c18a5b;
+ --soft:#f8eee6;
+}
+
+@media(max-width:430px){
+ :root{--arabic:28px}
+ .times{grid-template-columns:repeat(2,1fr)}
+ main{padding:12px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="loader" id="loader">
+ <div class="loader-box">
+  <div class="loader-logo">۞</div>
+  <b>Vaktimiz Pro</b>
+  <div class="spinner"></div>
+  <small>Uygulama hazırlanıyor...</small>
+ </div>
+</div>
+
+<div class="app">
+
+<header>
+ <div class="head">
+  <div class="brand">
+   <div class="logo">۞</div>
+   <div>
+    <b>Vaktimiz Pro</b>
+    <small>Vakit • Kur'an • Dua • Zikir</small>
+   </div>
+  </div>
+  <div class="head-actions">
+   <button class="icon" onclick="openPage('quran')">📖</button>
+   <button class="icon" onclick="openSettings()">⚙️</button>
+  </div>
+ </div>
+</header>
+
+<main>
+
+<!-- ================= ANA SAYFA ================= -->
+
+<section class="page active" id="home">
+
+ <div class="hero">
+  <div class="hero-label">VAKTİMİZ PRO</div>
+  <h1 id="greeting">Hoş geldin.</h1>
+  <p>Vakitlerini, Kur'an'ını ve ibadetlerini tek yerde.</p>
+
+  <div class="date">
+   <b id="dateText"></b>
+   <span id="hijriText">Hicri tarih</span>
+  </div>
+
+  <div class="location">
+   📍 <span id="locationText">Konum belirleniyor...</span>
+  </div>
+ </div>
+
+ <div class="next">
+  <div class="next-top">
+   <small>Sıradaki Vakit</small>
+   <span class="countdown" id="countdown">--:--:--</span>
+  </div>
+  <div class="next-name" id="nextName">Yükleniyor...</div>
+  <div class="progress"><i id="progress"></i></div>
+ </div>
+
+ <div class="times" id="times"></div>
+
+ <div class="section-title">
+  Günün Ayeti
+  <span>Kur'an-ı Kerim</span>
+ </div>
+
+ <div class="card">
+  <div class="daily-ar" id="dailyArabic">وَقُلْ رَبِّ زِدْنِي عِلْمًا</div>
+  <div class="daily-tr" id="dailyTr">Rabbim, ilmimi artır.</div>
+  <button class="primary" onclick="openDailyAyah()">📖 Ayeti Aç</button>
+  <button class="secondary" onclick="continueQuran()">Kur'an'a Devam Et</button>
+ </div>
+
+ <div class="section-title">Bugünün İçeriği</div>
+
+ <div class="card">
+  <b>📜 Günün Hadisi</b>
+  <div class="quote" id="hadithText" style="margin-top:10px"></div>
+  <div class="quote-source" id="hadithSource"></div>
+ </div>
+
+ <div class="card" style="margin-top:10px">
+  <b>🌿 Günün Risale-i Nur Vecizesi</b>
+  <div class="quote" id="risaleText" style="margin-top:10px"></div>
+  <div class="quote-source">Risale-i Nur</div>
+ </div>
+
+ <div class="section-title">Hızlı Erişim</div>
+
+ <div class="grid2">
+
+  <div class="feature" onclick="openPage('quran')">
+   <div class="feature-icon">📖</div>
+   <b>Kur'an-ı Kerim</b>
+   <small>114 sure • Arama • Favoriler</small>
+  </div>
+
+  <div class="feature" onclick="openPage('prayer')">
+   <div class="feature-icon">🕌</div>
+   <b>Namaz Vakitleri</b>
+   <small>Konumuna göre vakitler</small>
+  </div>
+
+  <div class="feature" onclick="openPage('qibla')">
+   <div class="feature-icon">🧭</div>
+   <b>Kıble</b>
+   <small>Kıble yönünü bul</small>
+  </div>
+
+  <div class="feature" onclick="openPage('dhikr')">
+   <div class="feature-icon">📿</div>
+   <b>Zikirmatik</b>
+   <small>Zikirlerini takip et</small>
+  </div>
+
+  <div class="feature" onclick="openPage('duas')">
+   <div class="feature-icon">🤲</div>
+   <b>Dualar</b>
+   <small>Seçilmiş dualar</small>
+  </div>
+
+  <div class="feature" onclick="openPage('risale')">
+   <div class="feature-icon">📚</div>
+   <b>Risale-i Nur</b>
+   <small>Gönle dokunan sözler</small>
+  </div>
+
+ </div>
+
+ <div class="section-title">Ramazan</div>
+
+ <div class="ramadan">
+  <small>İmsak • İftar</small>
+  <h2>🌙 Ramazan Paneli</h2>
+  <div class="ramadan-grid">
+   <div class="ramadan-box">
+    <small>İmsak</small>
+    <b id="ramadanImsak">--:--</b>
+   </div>
+   <div class="ramadan-box">
+    <small>İftar</small>
+    <b id="ramadanIftar">--:--</b>
+   </div>
+  </div>
+ </div>
+
+</section>
+
+
+<!-- ================= KUR'AN ================= -->
+
+<section class="page" id="quran">
+
+ <div id="quranListPage">
+
+  <div class="hero">
+   <div class="hero-label">KUR'AN-I KERİM</div>
+   <h1>Kalbine dokunan ayetler.</h1>
+   <p>114 sure • 6236 ayet • Uthmani metin</p>
+  </div>
+
+  <div class="section-title">Kur'an'da Ara</div>
+
+  <div class="search">
+   <input id="globalQuranSearch" placeholder="Sure veya ayet ara...">
+   <button onclick="globalSearchQuran()">⌕</button>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+   <b>📌 Son Okunan</b>
+   <div id="lastRead" style="color:var(--muted);font-size:12px;margin-top:6px">
+    Henüz okuma kaydı yok.
+   </div>
+   <button class="primary" onclick="continueQuran()">Kaldığım Yerden Devam Et</button>
+  </div>
+
+  <div class="section-title">Sureler</div>
+
+  <div class="search">
+   <input id="surahSearch" oninput="filterSurahs()" placeholder="Sure ara...">
+   <button onclick="filterSurahs()">⌕</button>
+  </div>
+
+  <div class="surah-list" id="surahList"></div>
+
+ </div>
+
+
+ <div id="readerPage" style="display:none">
+
+  <div class="reader-top">
+   <button class="back" onclick="closeQuranReader()">‹</button>
+   <div class="reader-title">
+    <b id="readerTitle"></b>
+    <small id="readerMeta"></small>
+   </div>
+   <div class="reader-actions">
+    <button class="reader-btn" onclick="toggleMeal()">ع</button>
+    <button class="reader-btn" onclick="changeFont(2)">A+</button>
+    <button class="reader-btn" onclick="changeFont(-2)">A−</button>
+   </div>
+  </div>
+
+  <div class="search">
+   <input id="ayahSearch" oninput="filterAyahs()" placeholder="Bu surede ayet ara...">
+   <button onclick="filterAyahs()">⌕</button>
+  </div>
+
+  <div class="cover">
+   <div class="cover-ar" id="coverArabic"></div>
+   <b id="coverTurkish"></b><br>
+   <small id="coverMeta"></small>
+  </div>
+
+  <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+
+  <div id="ayahList"></div>
+
+ </div>
+
+</section>
+
+
+<!-- ================= VAKİTLER ================= -->
+
+<section class="page" id="prayer">
+
+ <div class="hero">
+  <div class="hero-label">NAMAZ VAKİTLERİ</div>
+  <h1>Bugünün Vakitleri</h1>
+  <p>Konumuna göre otomatik hesaplanan günlük vakitler.</p>
+ </div>
+
+ <div class="section-title">Konum</div>
+
+ <div class="card">
+  <div class="prayer-location">
+   <input id="cityInput" placeholder="İl veya şehir yaz...">
+   <button class="small-btn" onclick="searchCity()">Ara</button>
+  </div>
+
+  <button class="secondary" onclick="detectLocation()">
+   📍 GPS ile Konumumu Bul
+  </button>
+
+  <small style="display:block;color:var(--muted);margin-top:10px;line-height:1.6">
+   Vakitler internet üzerinden gerçek zamanlı bir namaz vakti servisiyle
+   alınır. GPS konumu cihazınızın izinlerine bağlıdır.
+  </small>
+ </div>
+
+ <div class="section-title">Bugünün Vakitleri</div>
+ <div class="prayer-table" id="prayerTable"></div>
+
+ <div class="section-title">Vakit Sistemi</div>
+
+ <div class="card">
+  <b>🕌 Vakitlerin anlamı</b>
+  <div style="color:var(--muted);font-size:13px;line-height:1.8;margin-top:10px">
+   İmsak: Oruç başlangıcı<br>
+   Güneş: Güneş doğuşu<br>
+   Öğle: Öğle namazı<br>
+   İkindi: İkindi namazı<br>
+   Akşam: Güneş batışı ve iftar<br>
+   Yatsı: Yatsı namazı
+  </div>
+ </div>
+
+</section>
+
+
+<!-- ================= KIBLE ================= -->
+
+<section class="page" id="qibla">
+
+ <div class="hero">
+  <div class="hero-label">KIBLE</div>
+  <h1>Kıble Bulucu</h1>
+  <p>Konumundan Kâbe yönünü hesapla.</p>
+ </div>
+
+ <div class="section-title">Kıble Yönü</div>
+
+ <div class="qibla">
+
+  <div class="compass" id="compass">
+   <div class="needle" id="needle"></div>
+   <div class="center"></div>
+  </div>
+
+  <div class="degree" id="qiblaDegree">--°</div>
+
+  <p style="color:var(--muted);font-size:12px;line-height:1.7">
+   Önce konum izni ver. Telefonundaki pusula destekleniyorsa
+   cihaz yönüne göre gösterge güncellenebilir.
+  </p>
+
+  <button class="primary" onclick="startCompass()">🧭 Pusulayı Başlat</button>
+  <button class="secondary" onclick="detectLocation()">📍 Konumumu Kullan</button>
+
+ </div>
+
+</section>
+
+
+<!-- ================= ZİKİR ================= -->
+
+<section class="page" id="dhikr">
+
+ <div class="hero">
+  <div class="hero-label">ZİKİRMATİK</div>
+  <h1>Zikrini takip et.</h1>
+  <p>Sade, dikkat dağıtmayan ve kolay kullanım.</p>
+ </div>
+
+ <div class="section-title">Zikir</div>
+
+ <div class="dhikr">
+  <div class="dhikr-word" id="dhikrWord">سُبْحَانَ اللّٰهِ</div>
+  <div class="dhikr-count" id="dhikrCount">0</div>
+  <button onclick="addDhikr()">+</button>
+
+  <div class="dhikr-controls">
+   <button onclick="resetDhikr()">Sıfırla</button>
+   <button onclick="changeDhikr()">Zikri Değiştir</button>
+  </div>
+ </div>
+
+ <div class="section-title">Bugünkü Hedef</div>
+
+ <div class="card">
+  <b id="dhikrGoalText">100 zikir hedefi</b>
+  <div class="progress" style="margin-top:12px">
+   <i id="dhikrProgress"></i>
+  </div>
+ </div>
+
+</section>
+
+
+<!-- ================= DUALAR ================= -->
+
+<section class="page" id="duas">
+
+ <div class="hero">
+  <div class="hero-label">DUALAR</div>
+  <h1>Gönülden gelen dualar.</h1>
+  <p>Günlük hayatında okuyabileceğin seçilmiş dualar.</p>
+ </div>
+
+ <div class="section-title">Dualar</div>
+
+ <div id="duaList"></div>
+
+</section>
+
+
+<!-- ================= RİSALE ================= -->
+
+<section class="page" id="risale">
+
+ <div class="hero">
+  <div class="hero-label">RİSALE-İ NUR</div>
+  <h1>Gönle dokunan sözler.</h1>
+  <p>Düşünmek, tefekkür etmek ve huzur bulmak için.</p>
+ </div>
+
+ <div class="section-title">Vecizeler</div>
+
+ <div id="risaleList"></div>
+
+</section>
+
+
+</main>
+
+
+<!-- ================= ALT MENÜ ================= -->
+
+<nav class="bottom">
+
+ <button class="nav active" data-page="home" onclick="openPage('home',this)">
+  <i>⌂</i>Ana Sayfa
+ </button>
+
+ <button class="nav" data-page="prayer" onclick="openPage('prayer',this)">
+  <i>🕌</i>Vakitler
+ </button>
+
+ <button class="nav" data-page="quran" onclick="openPage('quran',this)">
+  <i>📖</i>Kur'an
+ </button>
+
+ <button class="nav" data-page="dhikr" onclick="openPage('dhikr',this)">
+  <i>📿</i>Zikir
+ </button>
+
+ <button class="nav" data-page="duas" onclick="openPage('duas',this)">
+  <i>🤲</i>Dualar
+ </button>
+
+</nav>
+
+</div>
+
+
+<!-- ================= AYARLAR ================= -->
+
+<div class="modal" id="settingsModal">
+ <div class="sheet">
+
+  <h2>⚙️ Vaktimiz Pro Ayarları</h2>
+
+  <div class="settings-list">
+
+   <div class="setting">
+    <label>🎨 Arayüz</label>
+    <select id="interfaceSelect" onchange="changeInterface(this.value)">
+     <option value="default">Zümrüt</option>
+     <option value="theme2">Lale</option>
+     <option value="theme3">Semâ</option>
+     <option value="theme4">Toprak</option>
+    </select>
+   </div>
+
+   <div class="setting">
+    <label>🌙 Tema</label>
+    <select id="themeSelect" onchange="changeTheme(this.value)">
+     <option value="light">Açık</option>
+     <option value="dark">Koyu</option>
+    </select>
+   </div>
+
+   <div class="setting">
+    <label>📖 Kur'an yazı boyutu</label>
+    <input type="range" min="22" max="48" id="fontRange"
+           oninput="setFont(this.value)">
+   </div>
+
+   <div class="setting">
+    <label>📜 Meal</label>
+    <button class="secondary" onclick="toggleMeal()">
+     Türkçe Meali Aç / Kapat
+    </button>
+   </div>
+
+   <div class="setting">
+    <label>🔔 Vakit hatırlatmaları</label>
+    <button class="secondary" onclick="requestNotifications()">
+     Bildirim İzni Ver
+    </button>
+   </div>
+
+   <div class="setting">
+    <label>📍 Konum</label>
+    <button class="secondary" onclick="detectLocation();closeSettings()">
+     GPS Konumumu Güncelle
+    </button>
+   </div>
+
+  </div>
+
+  <button class="close" onclick="closeSettings()">Kapat</button>
+
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+/* =========================================================
+   VAKTİMİZ PRO — TEK HTML SÜRÜMÜ
+   =========================================================
+
+   Gerçek dışı veri üretmek yerine:
+   - Kur'an: Al Quran Cloud API
+   - Arapça: Uthmani
+   - Türkçe meal: Diyanet çeviri endpoint'i
+   - Namaz vakitleri: Aladhan hesaplama servisi
+   - GPS: cihaz Geolocation API
+   - Kıble: matematiksel Kâbe yön hesabı
+   - Yerel ayarlar: localStorage
+
+   NOT:
+   Gerçek Android arka plan bildirimi ve uygulama kapalıyken
+   kesin ezan sesi için daha sonra Android native/PWA katmanı
+   gerekir. Bu tek HTML, tarayıcının izin verdiği bildirim
+   yeteneklerini kullanır.
+========================================================= */
+
+
+/* ---------- API ---------- */
+
+const QURAN_API =
+ "https://api.alquran.cloud/v1/quran/quran-uthmani";
+
+const MEAL_API =
+ "https://api.alquran.cloud/v1/quran/tr.diyanet";
+
+const PRAYER_API =
+ "https://api.aladhan.com/v1/timings";
+
+
+/* ---------- GLOBAL ---------- */
+
+let quran=[];
+let meal=[];
+let currentSurah=null;
+let currentAyahs=[];
+let mealVisible=false;
+
+let fontSize=
+ Number(localStorage.getItem("vp_font")||31);
+
+let favorites=
+ JSON.parse(localStorage.getItem("vp_favorites")||"[]");
+
+let prayerData=null;
+let userLat=null;
+let userLon=null;
+
+let dhikrCount=
+ Number(localStorage.getItem("vp_dhikr")||0);
+
+let dhikrIndex=
+ Number(localStorage.getItem("vp_dhikr_index")||0);
+
+let dhikrGoal=100;
+
+let currentInterface=
+ localStorage.getItem("vp_interface")||"default";
+
+
+/* ---------- HADISLER ---------- */
+
+const hadiths=[
+ {
+  text:"Allah, kulunun kendisine yönelmesinden dolayı sevinir.",
+  source:"Müslim"
+ },
+ {
+  text:"Ameller niyetlere göredir.",
+  source:"Buhârî, Müslim"
+ },
+ {
+  text:"Kolaylaştırınız, zorlaştırmayınız; müjdeleyiniz, nefret ettirmeyiniz.",
+  source:"Buhârî, Müslim"
+ },
+ {
+  text:"Sizin en hayırlınız Kur'an'ı öğrenen ve öğreteninizdir.",
+  source:"Buhârî"
+ },
+ {
+  text:"Güçlü kimse, öfkelendiğinde nefsine hâkim olandır.",
+  source:"Buhârî, Müslim"
+ },
+ {
+  text:"Mümin, insanların elinden ve dilinden emin olduğu kimsedir.",
+  source:"Buhârî, Müslim"
+ },
+ {
+  text:"Küçük görülse bile hiçbir iyiliği küçümseme.",
+  source:"Müslim"
+ }
+];
+
+
+/* ---------- RİSALE ---------- */
+
+const risaleQuotes=[
+ "İman hem nurdur, hem kuvvettir.",
+ "İnsanın vazife-i asliyesi, iman ve duadır.",
+ "Dünyanın üç yüzü vardır. Bir yüzü âhirete bakar.",
+ "Her şeyde bir hikmet-i İlâhiye vardır.",
+ "İman insanı insan eder; belki insanı sultan eder.",
+ "Hakikî lezzet ve saadet ve zevk ve rahat yalnız imandadır.",
+ "İman, insanı bütün kâinata karşı alâkadar eder.",
+ "Dua bir sırr-ı ubudiyettir.",
+ "Acizlik ve fakr, insanın en mühim iki hakikatidir.",
+ "Şükür, nimetin başıdır.",
+ "Tefekkür, kalbin ve aklın ibadetidir.",
+ "İnsan bu dünyaya yalnız güzel yaşamak için gelmemiştir.",
+ "Sabır, musibetin ilk darbesine karşı gösterilir.",
+ "Ümitvar olunuz. Şu istikbal inkılâbı içinde en yüksek gür sada İslâm'ın sadası olacaktır.",
+ "Her şey fanidir; bâki olan yalnız Allah'tır.",
+ "Kalbin anahtarı, iman ve ubudiyettir."
+];
+
+
+/* ---------- DUALAR ---------- */
+
+const duas=[
+ {
+  title:"Rabbena Âtinâ",
+  ar:"رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+  tr:"Rabbimiz! Bize dünyada da iyilik ver, ahirette de iyilik ver ve bizi ateşin azabından koru."
+ },
+ {
+  title:"İlim Duası",
+  ar:"رَبِّ زِدْنِي عِلْمًا",
+  tr:"Rabbim! İlmimi artır."
+ },
+ {
+  title:"Bağışlanma Duası",
+  ar:"رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ",
+  tr:"Rabbim! Beni, anne babamı ve müminleri bağışla."
+ },
+ {
+  title:"Kalplerin Sabitliği",
+  ar:"رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا",
+  tr:"Rabbimiz! Bizi hidayete erdirdikten sonra kalplerimizi eğriltme."
+ },
+ {
+  title:"Kolaylık Duası",
+  ar:"رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي",
+  tr:"Rabbim! Göğsümü genişlet ve işimi kolaylaştır."
+ },
+ {
+  title:"Şükür Duası",
+  ar:"رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ",
+  tr:"Rabbim! Bana ve anne babama verdiğin nimete şükretmemi nasip et."
+ }
+];
+
+
+/* ---------- ZİKİRLER ---------- */
+
+const dhikrs=[
+ "سُبْحَانَ اللّٰهِ",
+ "الْحَمْدُ لِلّٰهِ",
+ "اللّٰهُ أَكْبَرُ",
+ "لَا إِلٰهَ إِلَّا اللّٰهُ",
+ "أَسْتَغْفِرُ اللّٰهَ"
+];
+
+
+/* =========================================================
+   BAŞLANGIÇ
+========================================================= */
+
+document.addEventListener("DOMContentLoaded",async()=>{
+
+ setDate();
+ setGreeting();
+ loadSavedSettings();
+ renderHadith();
+ renderRisale();
+ renderDuas();
+ renderRisaleList();
+ renderDhikr();
+ updateDhikr();
+
+ document.documentElement.style.setProperty(
+  "--arabic",fontSize+"px"
+ );
+
+ await loadQuran();
+
+ await detectLocation(true);
+
+ hideLoader();
+
+});
+
+
+/* =========================================================
+   GENEL SAYFA
+========================================================= */
+
+function openPage(id,button){
+
+ document.querySelectorAll(".page")
+  .forEach(p=>p.classList.remove("active"));
+
+ const page=document.getElementById(id);
+ if(page)page.classList.add("active");
+
+ document.querySelectorAll(".nav")
+  .forEach(n=>n.classList.remove("active"));
+
+ const nav=
+  document.querySelector(`.nav[data-page="${id}"]`);
+
+ if(nav)nav.classList.add("active");
+
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+
+function setGreeting(){
+
+ const h=new Date().getHours();
+
+ let text="Hoş geldin.";
+
+ if(h>=5&&h<12)text="Hayırlı sabahlar.";
+ else if(h>=12&&h<18)text="Hayırlı günler.";
+ else if(h>=18&&h<23)text="Hayırlı akşamlar.";
+ else text="Hayırlı geceler.";
+
+ document.getElementById("greeting").textContent=text;
+}
+
+
+function setDate(){
+
+ const now=new Date();
+
+ document.getElementById("dateText").textContent=
+  now.toLocaleDateString("tr-TR",{
+   weekday:"long",
+   day:"numeric",
+   month:"long",
+   year:"numeric"
+  });
+
+ document.getElementById("hijriText").textContent=
+  new Intl.DateTimeFormat("tr-TR-u-ca-islamic",{
+   day:"numeric",
+   month:"long",
+   year:"numeric"
+  }).format(now);
+}
+
+
+/* =========================================================
+   KUR'AN
+========================================================= */
+
+async function loadQuran(){
+
+ try{
+
+  const ca=localStorage.getItem("vp_quran_ar");
+
+  const cm=localStorage.getItem("vp_quran_meal");
+
+  if(ca){
+
+   quran=JSON.parse(ca);
+
+   if(cm)meal=JSON.parse(cm);
+
+   renderSurahs();
+   setDailyAyah();
+   updateLastRead();
+
+   return;
+  }
+
+  const [a,b]=await Promise.all([
+   fetch(QURAN_API),
+   fetch(MEAL_API)
+  ]);
+
+  if(!a.ok)throw new Error("Kur'an alınamadı");
+
+  const ad=await a.json();
+
+  quran=ad.data.surahs||[];
+
+  if(b.ok){
+
+   const bd=await b.json();
+   meal=bd.data.surahs||[];
+
+  }
+
+  const total=
+   quran.reduce((x,s)=>x+s.ayahs.length,0);
+
+  if(quran.length!==114||total!==6236)
+   throw new Error("Eksik Kur'an verisi");
+
+  try{
+   localStorage.setItem(
+    "vp_quran_ar",JSON.stringify(quran)
+   );
+
+   localStorage.setItem(
+    "vp_quran_meal",JSON.stringify(meal)
+   );
+  }catch(e){}
+
+  renderSurahs();
+  setDailyAyah();
+  updateLastRead();
+
+ }catch(e){
+
+  console.error(e);
+
+  document.getElementById("dailyArabic")
+   .textContent=
+   "Kur'an verisi için internet bağlantısı gerekiyor.";
+
+  document.getElementById("dailyTr")
+   .textContent=
+   "Bağlantıyı kontrol edip uygulamayı yenileyin.";
+
+ }
+
+}
+
+
+function renderSurahs(){
+
+ const box=document.getElementById("surahList");
+
+ box.innerHTML="";
+
+ quran.forEach((s,i)=>{
+
+  const el=document.createElement("div");
+
+  el.className="surah";
+
+  el.dataset.search=(
+   s.number+" "+
+   s.name+" "+
+   s.englishName+" "+
+   (s.englishNameTranslation||"")
+  ).toLowerCase();
+
+  el.onclick=()=>openSurah(i);
+
+  el.innerHTML=`
+   <div class="surah-num">${s.number}</div>
+   <div class="surah-info">
+    <b>${s.englishName||s.name}</b>
+    <small>
+     ${s.revelationType==="Meccan"?"Mekke":"Medine"}
+     • ${s.numberOfAyahs} Ayet
+    </small>
+   </div>
+   <div class="surah-ar">${s.name}</div>
+  `;
+
+  box.appendChild(el);
+
+ });
+
+}
+
+
+function filterSurahs(){
+
+ const q=
+  document.getElementById("surahSearch")
+   .value.toLowerCase().trim();
+
+ document.querySelectorAll(".surah").forEach(x=>{
+  x.style.display=
+   !q||x.dataset.search.includes(q)
+   ?"flex":"none";
+ });
+
+}
+
+
+function openSurah(i){
+
+ currentSurah=i;
+ currentAyahs=quran[i].ayahs;
+
+ document.getElementById("quranListPage").style.display="none";
+ document.getElementById("readerPage").style.display="block";
+
+ const s=quran[i];
+
+ document.getElementById("readerTitle").textContent=
+  s.englishName||s.name;
+
+ document.getElementById("readerMeta").textContent=
+  `${s.numberOfAyahs} Ayet`;
+
+ document.getElementById("coverArabic").textContent=s.name;
+
+ document.getElementById("coverTurkish").textContent=
+  s.englishName||"";
+
+ document.getElementById("coverMeta").textContent=
+  `${s.revelationType==="Meccan"?"Mekke":"Medine"} • ${s.numberOfAyahs} Ayet`;
+
+ document.getElementById("ayahSearch").value="";
+
+ renderAyahs(currentAyahs);
+
+ saveProgress(i,1);
+
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+
+function closeQuranReader(){
+
+ document.getElementById("readerPage").style.display="none";
+ document.getElementById("quranListPage").style.display="block";
+
+}
+
+
+function renderAyahs(arr){
+
+ const box=document.getElementById("ayahList");
+
+ box.innerHTML="";
+
+ if(!arr.length){
+
+  box.innerHTML=
+   `<div class="card" style="text-align:center;color:var(--muted)">
+    Ayet bulunamadı.
+   </div>`;
+
+  return;
+ }
+
+ const ms=meal[currentSurah];
+
+ arr.forEach(a=>{
+
+  const el=document.createElement("div");
+
+  const key=
+   `${currentSurah+1}:${a.numberInSurah}`;
+
+  const fav=favorites.includes(key);
+
+  let tr="";
+
+  if(ms&&ms.ayahs){
+
+   const t=ms.ayahs.find(
+    x=>x.numberInSurah===a.numberInSurah
+   );
+
+   if(t)tr=t.text;
+  }
+
+  el.className=
+   "ayah"+(mealVisible?" show-meal":"");
+
+  el.innerHTML=`
+   <div class="ayah-head">
+    <div class="ayah-no">${a.numberInSurah}</div>
+    <div class="ayah-actions">
+     <button onclick="toggleFavorite(event,${currentSurah},${a.numberInSurah})">
+      ${fav?"♥":"♡"}
+     </button>
+     <button onclick="copyAyah(event,${currentSurah},${a.numberInSurah})">
+      ⧉
+     </button>
+     <button onclick="shareAyah(event,${currentSurah},${a.numberInSurah})">
+      ↗
+     </button>
+    </div>
+   </div>
+
+   <div class="ayah-text">${a.text}</div>
+
+   <div class="meal">${tr}</div>
+  `;
+
+  box.appendChild(el);
+
+ });
+
+}
+
+
+function filterAyahs(){
+
+ const q=
+  document.getElementById("ayahSearch")
+   .value.toLowerCase().trim();
+
+ if(!q){
+  renderAyahs(currentAyahs);
+  return;
+ }
+
+ const result=currentAyahs.filter(a=>{
+
+  let tr="";
+
+  const ms=meal[currentSurah];
+
+  if(ms&&ms.ayahs){
+
+   const t=ms.ayahs.find(
+    x=>x.numberInSurah===a.numberInSurah
+   );
+
+   if(t)tr=t.text.toLowerCase();
+  }
+
+  return(
+   a.text.toLowerCase().includes(q)||
+   tr.includes(q)||
+   String(a.numberInSurah)===q
+  );
+
+ });
+
+ renderAyahs(result);
+}
+
+
+function globalSearchQuran(){
+
+ const q=
+  document.getElementById("globalQuranSearch")
+   .value.toLowerCase().trim();
+
+ if(!q)return;
+
+ const results=[];
+
+ quran.forEach((s,si)=>{
+
+  const name=(
+   s.name+" "+s.englishName+" "+s.number
+  ).toLowerCase();
+
+  if(name.includes(q)){
+
+   results.push({
+    si,
+    ayah:s.ayahs[0]
+   });
+
+  }
+
+  s.ayahs.forEach(a=>{
+
+   let tr="";
+
+   const ms=meal[si];
+
+   if(ms&&ms.ayahs){
+
+    const t=ms.ayahs.find(
+     x=>x.numberInSurah===a.numberInSurah
+    );
+
+    if(t)tr=t.text.toLowerCase();
+   }
+
+   if(
+    a.text.toLowerCase().includes(q)||
+    tr.includes(q)||
+    String(a.numberInSurah)===q
+   ){
+
+    results.push({si,ayah:a});
+
+   }
+
+  });
+
+ });
+
+ if(!results.length){
+
+  showToast("Sonuç bulunamadı");
+  return;
+ }
+
+ openSurah(results[0].si);
+
+ setTimeout(()=>{
+
+  const index=
+   results[0].ayah.numberInSurah-1;
+
+  const el=
+   document.querySelectorAll(".ayah")[index];
+
+  if(el)
+   el.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+   });
+
+ },300);
+
+}
+
+
+function setDailyAyah(){
+
+ if(!quran.length)return;
+
+ const now=new Date();
+
+ const seed=
+  now.getFullYear()*10000+
+  (now.getMonth()+1)*100+
+  now.getDate();
+
+ const target=seed%6236;
+
+ let n=0,chosen=null,surah=null;
+
+ for(const s of quran){
+
+  if(target<n+s.ayahs.length){
+
+   chosen=s.ayahs[target-n];
+   surah=s;
+   break;
+
+  }
+
+  n+=s.ayahs.length;
+ }
+
+ if(!chosen)return;
+
+ document.getElementById("dailyArabic").textContent=
+  chosen.text;
+
+ let tr="";
+
+ if(meal[surah.number-1]){
+
+  const t=meal[surah.number-1].ayahs.find(
+   x=>x.numberInSurah===chosen.numberInSurah
+  );
+
+  if(t)tr=t.text;
+ }
+
+ document.getElementById("dailyTr").textContent=
+  tr||`${surah.englishName}, ${chosen.numberInSurah}. ayet`;
+
+ localStorage.setItem(
+  "vp_daily",
+  JSON.stringify({
+   surah:surah.number-1,
+   ayah:chosen.numberInSurah
+  })
+ );
+
+}
+
+
+function openDailyAyah(){
+
+ const d=
+  JSON.parse(localStorage.getItem("vp_daily")||"null");
+
+ if(d){
+
+  openPage("quran");
+  openSurah(d.surah);
+
+  setTimeout(()=>{
+
+   const el=
+    document.querySelectorAll(".ayah")[d.ayah-1];
+
+   if(el)
+    el.scrollIntoView({
+     behavior:"smooth",
+     block:"center"
+    });
+
+  },250);
+
+ }else continueQuran();
+
+}
+
+
+function saveProgress(surah,ayah){
+
+ localStorage.setItem(
+  "vp_progress",
+  JSON.stringify({surah,ayah})
+ );
+
+ updateLastRead();
+}
+
+
+function updateLastRead(){
+
+ const d=
+  JSON.parse(localStorage.getItem("vp_progress")||"null");
+
+ const el=document.getElementById("lastRead");
+
+ if(!d||!quran[d.surah]){
+
+  el.textContent="Henüz okuma kaydı yok.";
+  return;
+ }
+
+ const s=quran[d.surah];
+
+ el.textContent=
+  `${s.englishName||s.name} • ${d.ayah}. ayet`;
+
+}
+
+
+function continueQuran(){
+
+ const d=
+  JSON.parse(localStorage.getItem("vp_progress")||"null");
+
+ openPage("quran");
+
+ if(!d){
+
+  if(quran.length)openSurah(0);
+  return;
+
+ }
+
+ openSurah(d.surah);
+
+ setTimeout(()=>{
+
+  const el=
+   document.querySelectorAll(".ayah")[d.ayah-1];
+
+  if(el)
+   el.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+   });
+
+ },300);
+
+}
+
+
+function toggleFavorite(e,si,ai){
+
+ e.stopPropagation();
+
+ const key=`${si+1}:${ai}`;
+
+ if(favorites.includes(key)){
+
+  favorites=favorites.filter(x=>x!==key);
+  showToast("Favorilerden çıkarıldı");
+
+ }else{
+
+  favorites.push(key);
+  showToast("Favorilere eklendi");
+
+ }
+
+ localStorage.setItem(
+  "vp_favorites",
+  JSON.stringify(favorites)
+ );
+
+ renderAyahs(currentAyahs);
+}
+
+
+async function copyAyah(e,si,ai){
+
+ e.stopPropagation();
+
+ const a=quran[si].ayahs.find(
+  x=>x.numberInSurah===ai
+ );
+
+ const text=
+  `${quran[si].englishName} ${ai}. Ayet\n\n${a.text}`;
+
+ try{
+
+  await navigator.clipboard.writeText(text);
+  showToast("Ayet kopyalandı");
+
+ }catch(err){
+
+  showToast("Kopyalama desteklenmiyor");
+
+ }
+
+}
+
+
+async function shareAyah(e,si,ai){
+
+ e.stopPropagation();
+
+ const a=quran[si].ayahs.find(
+  x=>x.numberInSurah===ai
+ );
+
+ const text=
+  `${quran[si].englishName} ${ai}. Ayet\n\n${a.text}`;
+
+ if(navigator.share){
+
+  try{
+   await navigator.share({
+    title:"Vaktimiz Pro",
+    text
+   });
+  }catch(err){}
+
+ }else{
+
+  await navigator.clipboard.writeText(text);
+  showToast("Ayet kopyalandı");
+
+ }
+
+}
+
+
+function toggleMeal(){
+
+ mealVisible=!mealVisible;
+
+ document.querySelectorAll(".ayah")
+  .forEach(x=>
+   x.classList.toggle("show-meal",mealVisible)
+  );
+
+ showToast(
+  mealVisible?"Meal açıldı":"Meal kapatıldı"
+ );
+
+}
+
+
+function changeFont(n){
+
+ setFont(
+  Math.max(22,Math.min(48,fontSize+n))
+ );
+
+}
+
+
+function setFont(v){
+
+ fontSize=Number(v);
+
+ document.documentElement.style.setProperty(
+  "--arabic",fontSize+"px"
+ );
+
+ localStorage.setItem("vp_font",fontSize);
+
+ const range=document.getElementById("fontRange");
+
+ if(range)range.value=fontSize;
+}
+
+
+/* =========================================================
+   NAMAZ VAKİTLERİ
+========================================================= */
+
+async function detectLocation(silent=false){
+
+ if(!navigator.geolocation){
+
+  if(!silent)
+   showToast("GPS desteklenmiyor");
+
+  return;
+ }
+
+ if(!silent)
+  showToast("Konum alınıyor...");
+
+ navigator.geolocation.getCurrentPosition(
+  async pos=>{
+
+   userLat=pos.coords.latitude;
+   userLon=pos.coords.longitude;
+
+   localStorage.setItem(
+    "vp_lat",userLat
+   );
+
+   localStorage.setItem(
+    "vp_lon",userLon
+   );
+
+   document.getElementById("locationText").textContent=
+    `${userLat.toFixed(3)}, ${userLon.toFixed(3)}`;
+
+   calculateQibla();
+
+   await loadPrayerTimes(userLat,userLon);
+
+   if(!silent)
+    showToast("Konum güncellendi");
+
+  },
+  err=>{
+
+   const la=
+    localStorage.getItem("vp_lat");
+
+   const lo=
+    localStorage.getItem("vp_lon");
+
+   if(la&&lo){
+
+    userLat=Number(la);
+    userLon=Number(lo);
+
+    loadPrayerTimes(userLat,userLon);
+    calculateQibla();
+
+    document.getElementById("locationText").textContent=
+     "Kayıtlı konum";
+
+   }else{
+
+    document.getElementById("locationText").textContent=
+     "Konum seçilmedi";
+
+    if(!silent)
+     showToast("Konum izni verilmedi");
+
+   }
+
+  },
+  {
+   enableHighAccuracy:true,
+   timeout:10000,
+   maximumAge:600000
+  }
+ );
+
+}
+
+
+async function searchCity(){
+
+ const city=
+  document.getElementById("cityInput").value.trim();
+
+ if(!city){
+
+  showToast("Şehir yazın");
+  return;
+
+ }
+
+ showToast("Şehir aranıyor...");
+
+ try{
+
+  const res=
+   await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=tr&q=${encodeURIComponent(city)}`
+   );
+
+  const data=await res.json();
+
+  if(!data.length){
+
+   showToast("Şehir bulunamadı");
+   return;
+
+  }
+
+  userLat=Number(data[0].lat);
+  userLon=Number(data[0].lon);
+
+  document.getElementById("locationText").textContent=
+   data[0].display_name.split(",")[0];
+
+  localStorage.setItem("vp_lat",userLat);
+  localStorage.setItem("vp_lon",userLon);
+
+  calculateQibla();
+
+  await loadPrayerTimes(userLat,userLon);
+
+  showToast("Konum ayarlandı");
+
+ }catch(e){
+
+  showToast("Şehir aranırken hata oluştu");
+
+ }
+
+}
+
+
+async function loadPrayerTimes(lat,lon){
+
+ try{
+
+  const date=
+   new Date().toLocaleDateString("en-GB").replace(/\//g,"-");
+
+  const url=
+   `${PRAYER_API}/${date}?latitude=${lat}&longitude=${lon}&method=13`;
+
+  const res=await fetch(url);
+
+  if(!res.ok)throw new Error();
+
+  const data=await res.json();
+
+  prayerData=data.data.timings;
+
+  renderPrayerTimes();
+
+  updateNextPrayer();
+
+ }catch(e){
+
+  console.error(e);
+
+  document.getElementById("prayerTable").innerHTML=
+   `<div class="card">
+    Vakit verisi alınamadı. İnternet bağlantınızı kontrol edin.
+   </div>`;
+
+ }
+
+}
+
+
+function cleanTime(t){
+
+ return String(t||"").split(" ")[0];
+}
+
+
+function renderPrayerTimes(){
+
+ if(!prayerData)return;
+
+ const items=[
+  ["İmsak",prayerData.Fajr],
+  ["Güneş",prayerData.Sunrise],
+  ["Öğle",prayerData.Dhuhr],
+  ["İkindi",prayerData.Asr],
+  ["Akşam",prayerData.Maghrib],
+  ["Yatsı",prayerData.Isha]
+ ];
+
+ const box=document.getElementById("prayerTable");
+
+ box.innerHTML=items.map(x=>`
+  <div class="prayer-row" data-prayer="${x[0]}">
+   <div><b>${x[0]}</b><br><small>Namaz vakti</small></div>
+   <b>${cleanTime(x[1])}</b>
+  </div>
+ `).join("");
+
+ document.getElementById("times").innerHTML=
+  items.map(x=>`
+   <div class="time" data-time="${x[0]}">
+    <small>${x[0]}</small>
+    <b>${cleanTime(x[1])}</b>
+   </div>
+  `).join("");
+
+ document.getElementById("ramadanImsak").textContent=
+  cleanTime(prayerData.Fajr);
+
+ document.getElementById("ramadanIftar").textContent=
+  cleanTime(prayerData.Maghrib);
+
+}
+
+
+function parseTodayTime(t){
+
+ const clean=cleanTime(t);
+
+ const [h,m]=clean.split(":").map(Number);
+
+ const d=new Date();
+
+ d.setHours(h,m,0,0);
+
+ return d;
+}
+
+
+function updateNextPrayer(){
+
+ if(!prayerData)return;
+
+ const names=[
+  ["İmsak","Fajr"],
+  ["Güneş","Sunrise"],
+  ["Öğle","Dhuhr"],
+  ["İkindi","Asr"],
+  ["Akşam","Maghrib"],
+  ["Yatsı","Isha"]
+ ];
+
+ const now=new Date();
+
+ let next=null;
+
+ for(const item of names){
+
+  const d=parseTodayTime(prayerData[item[1]]);
+
+  if(d>now){
+
+   next={
+    name:item[0],
+    date:d,
+    time:cleanTime(prayerData[item[1]])
+   };
+
+   break;
+
+  }
+
+ }
+
+ if(!next){
+
+  next={
+   name:"İmsak",
+   date:parseTodayTime(prayerData.Fajr),
+   time:cleanTime(prayerData.Fajr)
+  };
+
+  next.date.setDate(next.date.getDate()+1);
+
+ }
+
+ document.getElementById("nextName").textContent=
+  `${next.name} • ${next.time}`;
+
+ document.querySelectorAll(".time")
+  .forEach(x=>x.classList.remove("active"));
+
+ const active=
+  document.querySelector(
+   `.time[data-time="${next.name}"]`
+  );
+
+ if(active)active.classList.add("active");
+
+ updateCountdown(next);
+
+}
+
+
+function updateCountdown(next){
+
+ const now=new Date();
+
+ let diff=next.date-now;
+
+ if(diff<0)diff=0;
+
+ const sec=Math.floor(diff/1000);
+
+ const h=Math.floor(sec/3600);
+
+ const m=Math.floor((sec%3600)/60);
+
+ const s=sec%60;
+
+ document.getElementById("countdown").textContent=
+  `${String(h).padStart(2,"0")}:`+
+  `${String(m).padStart(2,"0")}:`+
+  `${String(s).padStart(2,"0")}`;
+
+}
+
+
+setInterval(()=>{
+
+ if(prayerData)
+  updateNextPrayer();
+
+},1000);
+
+
+/* =========================================================
+   KIBLE
+========================================================= */
+
+function calculateQibla(){
+
+ if(userLat==null||userLon==null)return;
+
+ const kaabaLat=21.422487;
+ const kaabaLon=39.826206;
+
+ const φ1=userLat*Math.PI/180;
+ const φ2=kaabaLat*Math.PI/180;
+ const dLon=(kaabaLon-userLon)*Math.PI/180;
+
+ const y=Math.sin(dLon)*Math.cos(φ2);
+
+ const x=
+  Math.cos(φ1)*Math.sin(φ2)-
+  Math.sin(φ1)*Math.cos(φ2)*Math.cos(dLon);
+
+ let brng=Math.atan2(y,x)*180/Math.PI;
+
+ brng=(brng+360)%360;
+
+ document.getElementById("qiblaDegree").textContent=
+  `${brng.toFixed(1)}°`;
+
+ document.getElementById("needle").style.transform=
+  `rotate(${brng}deg)`;
+
+}
+
+
+function startCompass(){
+
+ if(!window.DeviceOrientationEvent){
+
+  showToast("Pusula desteklenmiyor");
+  return;
+
+ }
+
+ if(
+  typeof DeviceOrientationEvent.requestPermission===
+  "function"
+ ){
+
+  DeviceOrientationEvent
+   .requestPermission()
+   .then(permission=>{
+
+    if(permission==="granted")
+     window.addEventListener(
+      "deviceorientation",
+      handleOrientation
+     );
+    else
+     showToast("Pusula izni verilmedi");
+
+   })
+   .catch(()=>showToast("Pusula başlatılamadı"));
+
+ }else{
+
+  window.addEventListener(
+   "deviceorientationabsolute",
+   handleOrientation,
+   true
+  );
+
+  window.addEventListener(
+   "deviceorientation",
+   handleOrientation,
+   true
+  );
+
+ }
+
+ showToast("Pusula başlatıldı");
+
+}
+
+
+function handleOrientation(e){
+
+ if(userLat==null||userLon==null)return;
+
+ let heading=null;
+
+ if(e.webkitCompassHeading!=null)
+  heading=e.webkitCompassHeading;
+ else if(e.absolute&&e.alpha!=null)
+  heading=360-e.alpha;
+ else if(e.alpha!=null)
+  heading=360-e.alpha;
+
+ if(heading==null)return;
+
+ const kaabaLat=21.422487;
+ const kaabaLon=39.826206;
+
+ const φ1=userLat*Math.PI/180;
+ const φ2=kaabaLat*Math.PI/180;
+ const dl=(kaabaLon-userLon)*Math.PI/180;
+
+ let bearing=
+  Math.atan2(
+   Math.sin(dl)*Math.cos(φ2),
+   Math.cos(φ1)*Math.sin(φ2)-
+   Math.sin(φ1)*Math.cos(φ2)*Math.cos(dl)
+  )*180/Math.PI;
+
+ bearing=(bearing+360)%360;
+
+ const rotation=bearing-heading;
+
+ document.getElementById("needle").style.transform=
+  `rotate(${rotation}deg)`;
+
+}
+
+
+/* =========================================================
+   ZİKİR
+========================================================= */
+
+function renderDhikr(){
+
+ document.getElementById("dhikrWord").textContent=
+  dhikrs[dhikrIndex];
+
+}
+
+function addDhikr(){
+
+ dhikrCount++;
+
+ localStorage.setItem(
+  "vp_dhikr",dhikrCount
+ );
+
+ updateDhikr();
+
+ if(dhikrCount===dhikrGoal)
+  showToast("Hedef tamamlandı 🌿");
+
+}
+
+function resetDhikr(){
+
+ dhikrCount=0;
+
+ localStorage.setItem(
+  "vp_dhikr",dhikrCount
+ );
+
+ updateDhikr();
+
+}
+
+function changeDhikr(){
+
+ dhikrIndex=
+  (dhikrIndex+1)%dhikrs.length;
+
+ dhikrCount=0;
+
+ localStorage.setItem(
+  "vp_dhikr_index",dhikrIndex
+ );
+
+ localStorage.setItem(
+  "vp_dhikr",0
+ );
+
+ renderDhikr();
+ updateDhikr();
+
+}
+
+function updateDhikr(){
+
+ document.getElementById("dhikrCount").textContent=
+  dhikrCount;
+
+ document.getElementById("dhikrProgress")
+  .style.width=
+   Math.min(
+    100,
+    dhikrCount/dhikrGoal*100
+   )+"%";
+
+}
+
+
+/* =========================================================
+   DUALAR
+========================================================= */
+
+function renderDuas(){
+
+ const box=document.getElementById("duaList");
+
+ box.innerHTML=duas.map(d=>`
+  <div class="dua">
+   <b>${d.title}</b>
+   <div class="dua-ar">${d.ar}</div>
+   <div class="dua-tr">${d.tr}</div>
+  </div>
+ `).join("");
+
+}
+
+
+/* =========================================================
+   RİSALE
+========================================================= */
+
+function renderRisale(){
+
+ const index=
+  new Date().getDate()%risaleQuotes.length;
+
+ document.getElementById("risaleText").textContent=
+  "“"+risaleQuotes[index]+"”";
+
+}
+
+
+function renderRisaleList(){
+
+ const box=document.getElementById("risaleList");
+
+ box.innerHTML=risaleQuotes.map((q,i)=>`
+  <div class="card" style="margin-bottom:9px">
+   <div class="quote">“${q}”</div>
+   <div class="quote-source">Risale-i Nur • ${i+1}</div>
+  </div>
+ `).join("");
+
+}
+
+
+/* =========================================================
+   HADİS
+========================================================= */
+
+function renderHadith(){
+
+ const i=
+  new Date().getDate()%hadiths.length;
+
+ document.getElementById("hadithText").textContent=
+  "“"+hadiths[i].text+"”";
+
+ document.getElementById("hadithSource").textContent=
+  hadiths[i].source;
+
+}
+
+
+/* =========================================================
+   AYARLAR
+========================================================= */
+
+function openSettings(){
+
+ document.getElementById("settingsModal")
+  .classList.add("active");
+
+}
+
+
+function closeSettings(){
+
+ document.getElementById("settingsModal")
+  .classList.remove("active");
+
+}
+
+
+function changeTheme(v){
+
+ document.body.classList.toggle(
+  "dark",
+  v==="dark"
+ );
+
+ localStorage.setItem("vp_theme",v);
+
+}
+
+
+function changeInterface(v){
+
+ document.body.classList.remove(
+  "theme2","theme3","theme4"
+ );
+
+ if(v!=="default")
+  document.body.classList.add(v);
+
+ currentInterface=v;
+
+ localStorage.setItem(
+  "vp_interface",v
+ );
+
+}
+
+
+function loadSavedSettings(){
+
+ const theme=
+  localStorage.getItem("vp_theme")||"light";
+
+ const interfaceName=
+  localStorage.getItem("vp_interface")||"default";
+
+ document.body.classList.toggle(
+  "dark",theme==="dark"
+ );
+
+ if(interfaceName!=="default")
+  document.body.classList.add(interfaceName);
+
+ document.getElementById("themeSelect").value=theme;
+
+ document.getElementById("interfaceSelect").value=
+  interfaceName;
+
+ document.getElementById("fontRange").value=
+  fontSize;
+
+}
+
+
+function requestNotifications(){
+
+ if(!("Notification" in window)){
+
+  showToast("Bildirim desteği yok");
+  return;
+
+ }
+
+ Notification.requestPermission()
+  .then(permission=>{
+
+   if(permission==="granted")
+    showToast("Bildirim izni verildi");
+   else
+    showToast("Bildirim izni verilmedi");
+
+  });
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+function showToast(text){
+
+ const t=document.getElementById("toast");
+
+ t.textContent=text;
+ t.classList.add("show");
+
+ clearTimeout(toastTimer);
+
+ toastTimer=setTimeout(()=>{
+  t.classList.remove("show");
+ },2300);
+
+}
+
+
+/* =========================================================
+   LOADER
+========================================================= */
+
+function hideLoader(){
+
+ const l=document.getElementById("loader");
+
+ l.style.opacity="0";
+
+ setTimeout(()=>{
+  l.style.display="none";
+ },350);
+
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+document.getElementById("settingsModal")
+ .addEventListener("click",e=>{
+
+  if(e.target===e.currentTarget)
+   closeSettings();
+
+ });
+
+
+/* =========================================================
+   KLAVYE / GERİ
+========================================================= */
+
+document.addEventListener("keydown",e=>{
+
+ if(e.key==="Escape")
+  closeSettings();
+
+});
+
+
+/* =========================================================
+   SAYFA GÖRÜNÜMÜNDE GÜNCELLE
+========================================================= */
+
+document.addEventListener("visibilitychange",()=>{
+
+ if(!document.hidden){
+
+  setDate();
+  setGreeting();
+
+  if(prayerData)
+   updateNextPrayer();
+
+ }
+
+});
+
+
+</script>
+
+</body>
+</html>
