@@ -8,155 +8,133 @@ on:
 
 jobs:
   build:
+    name: Android APK Derle
     runs-on: ubuntu-latest
 
     steps:
+
+      # 1 - Kaynak kodu al
       - name: Kaynak kodu al
         uses: actions/checkout@v4
 
+      # 2 - Java 17
       - name: Java 17 kurulumu
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
+      # 3 - Android SDK
       - name: Android SDK kurulumu
         uses: android-actions/setup-android@v3
 
+      # 4 - Android SDK paketleri
       - name: Android SDK paketlerini kur
         run: |
           yes | sdkmanager --licenses || true
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Android projesini oluştur
+      # 5 - Gradle wrapper kontrolü
+      - name: Gradle wrapper kontrolü
         shell: bash
         run: |
           set -e
 
-          mkdir -p app/src/main/java/com/vaktimizpro/app
-          mkdir -p app/src/main/assets
-          mkdir -p app/src/main/res/mipmap-hdpi
-          mkdir -p app/src/main/res/mipmap-mdpi
-          mkdir -p app/src/main/res/mipmap-xhdpi
-          mkdir -p app/src/main/res/mipmap-xxhdpi
-          mkdir -p app/src/main/res/mipmap-xxxhdpi
-
-          if [ ! -f "index.html" ]; then
-            echo "HATA: Kök dizinde index.html bulunamadı."
+          if [ ! -f "gradlew" ]; then
+            echo "HATA: gradlew dosyası bulunamadı."
+            echo "Android projesinin kök dizininde gradlew bulunmalıdır."
             exit 1
           fi
 
-          cp index.html app/src/main/assets/index.html
+          chmod +x gradlew
 
-      - name: settings.gradle oluştur
+          echo "Gradle wrapper bulundu:"
+          ls -l gradlew
+
+      # 6 - Gradle projesini kontrol et
+      - name: Gradle projesini kontrol et
         shell: bash
         run: |
-          cat > settings.gradle <<'EOF'
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
+          set -e
 
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
+          if [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
+            echo "HATA: settings.gradle veya settings.gradle.kts bulunamadı."
+            exit 1
+          fi
 
-          rootProject.name = "VaktimizPro"
-          include(":app")
-          EOF
+          if [ ! -d "app" ]; then
+            echo "HATA: app klasörü bulunamadı."
+            exit 1
+          fi
 
-      - name: Ana Gradle dosyasını oluştur
+          echo "Android projesi bulundu."
+
+      # 7 - Temizle
+      - name: Gradle temizleme
+        run: |
+          ./gradlew clean
+
+      # 8 - DEBUG APK oluştur
+      # Özel keystore kullanılmıyor.
+      # Android debug imzasını otomatik kullanır.
+      - name: Debug APK oluştur
+        run: |
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon
+
+      # 9 - APK'yı bul
+      - name: APK dosyasını bul
         shell: bash
         run: |
-          cat > build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application' version '8.7.3' apply false
-          }
-          EOF
+          set -e
 
-      - name: Gradle özelliklerini oluştur
+          echo "APK dosyaları aranıyor..."
+
+          find . -type f -name "*.apk" -print
+
+          APK=$(find app/build/outputs/apk -type f -name "*.apk" | head -n 1)
+
+          if [ -z "$APK" ]; then
+            echo "HATA: APK oluşturulamadı."
+            exit 1
+          fi
+
+          echo "Bulunan APK:"
+          echo "$APK"
+
+          mkdir -p release
+
+          cp "$APK" "release/Vaktimiz-Pro.apk"
+
+          echo "Hazır APK:"
+          ls -lh release/Vaktimiz-Pro.apk
+
+      # 10 - APK'yı GitHub'a yükle
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vaktimiz-Pro-APK
+          path: release/Vaktimiz-Pro.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # 11 - Son kontrol
+      - name: APK kontrolü
         shell: bash
         run: |
-          cat > gradle.properties <<'EOF'
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-          android.useAndroidX=true
-          android.nonTransitiveRClass=true
-          EOF
+          set -e
 
-      - name: App Gradle dosyasını oluştur
-        shell: bash
-        run: |
-          cat > app/build.gradle <<'EOF'
-          plugins {
-              id 'com.android.application'
-          }
+          test -f release/Vaktimiz-Pro.apk
 
-          android {
-              namespace 'com.vaktimizpro.app'
-              compileSdk 35
+          SIZE=$(stat -c%s release/Vaktimiz-Pro.apk)
 
-              defaultConfig {
-                  applicationId 'com.vaktimizpro.app'
-                  minSdk 23
-                  targetSdk 35
-                  versionCode 1
-                  versionName '1.0'
-              }
+          if [ "$SIZE" -le 10000 ]; then
+            echo "HATA: APK dosyası şüpheli derecede küçük."
+            exit 1
+          fi
 
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                      shrinkResources false
-                  }
-
-                  debug {
-                      minifyEnabled false
-                      shrinkResources false
-                  }
-              }
-
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-          }
-          EOF
-
-      - name: MainActivity oluştur
-        shell: bash
-        run: |
-          cat > app/src/main/java/com/vaktimizpro/app/MainActivity.java <<'EOF'
-          package com.vaktimizpro.app;
-
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.webkit.WebChromeClient;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-
-          public class MainActivity extends Activity {
-
-              private WebView webView;
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  webView = new WebView(this);
-                  setContentView(webView);
-
-                  WebSettings settings = webView.getSettings();
-
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  settings.setDatabaseEnabled(true);
-
-                 
+          echo "================================"
+          echo "APK BAŞARIYLA OLUŞTURULDU"
+          echo "================================"
+          echo "Dosya: release/Vaktimiz-Pro.apk"
+          echo "Boyut: $SIZE byte"
